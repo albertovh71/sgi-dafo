@@ -32,12 +32,17 @@ function normAcc(x){ // datos antiguos: una sola acción en el propio registro �
   if(!Array.isArray(x.acciones)){const a={accion:x.accion||'',resp:x.resp||'',plazo:x.plazo||'',estado:x.estado||'',coment:x.coment||''};x.acciones=(a.accion||a.resp||a.plazo||a.coment)?[a]:[]}
   delete x.accion;delete x.resp;delete x.plazo;delete x.coment;delete x.proceso;delete x.factor;delete x.plazoRaw;return x}
 function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.estado==='Cerrada')?'Cerrada':(a.some(z=>z.estado)?'En curso':'')}
-const evaluado=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
+const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
+const valorado=x=>('P' in x)?(!!x.P&&!!x.G):(!!x.V&&!!x.R);
+// un factor está evaluado cuando tiene fila de riesgo/oportunidad Y está valorada (P y G, o V y R)
+const evaluado=f=>{const x=fila0(f);return x&&valorado(x)?x:null};
 
 function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=(r.P&&r.G)?r.P*r.G:null;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
 function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
 function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
 function evaluar(id){const f=fm[id];
+  const ya=fila0(f);
+  if(ya){S.tab=(f.tipo==='D'||f.tipo==='A')?'riesgos':'oport';S.estado='todos';S.proceso='';render();return}
   if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
   else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);S.tab='oport'}
   S.estado='todos';S.proceso='';render()}
@@ -229,7 +234,7 @@ function dafo(){
   const m=D.meta, orden=[...Object.values(PROCS),'(sin proceso)'];
   const par=(a,b,ta,tb)=>{
     const cel=f=>{if(!f)return '<td></td><td></td>';const e=evaluado(f),neg=f.tipo==='D'||f.tipo==='A';
-      const bd=e?(neg?`<span class="pill ${lvl(e.R)}">R ${e.R??'—'}</span>`:`<span class="pill ${lvl(e.VR)}">VR ${e.VR??'—'}</span>`):`<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
+      const bd=e?(neg?`<span class="pill ${lvl(e.R)}">R ${e.R??'—'}</span>`:`<span class="pill ${lvl(e.VR)}">VR ${e.VR??'—'}</span>`):`${fila0(f)?'<span class="pill n">pendiente de evaluar</span> ':''}<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
       return `<td>${esc(f.texto)} <button class="ed" title="Editar" onclick="editar('factor','${f.id}')">✎</button></td><td class="xx">${bd}</td>`};
     const grupos=orden.map(p=>{
       const A=D.factors.filter(f=>f.tipo===a&&okProc(f.proceso)&&proc(f.proceso)===p), B=D.factors.filter(f=>f.tipo===b&&okProc(f.proceso)&&proc(f.proceso)===p);
