@@ -74,7 +74,7 @@ const fdStart=()=>{if(!FD){FD=JSON.parse(JSON.stringify(D.factors));FE={externo:
 const fdDirty=()=>!!FD&&(JSON.stringify(FD)!==JSON.stringify(D.factors)||FE.externo.length>0||FE.interno.length>0);
 const TABT={externo:['A','O'],interno:['D','F']};
 function fdGrupo(id){const f=FD.find(x=>x.id===id);if(!f)return [];const tab=(TABT.externo.includes(f.tipo))?'externo':'interno';
-  return FD.filter(x=>x.cat===f.cat&&x.texto===f.texto&&TABT[tab].includes(x.tipo))}
+  return FD.filter(x=>(x.cat||'')===(f.cat||'')&&x.texto===f.texto&&TABT[tab].includes(x.tipo))}
 function fdToggle(id,w){fdStart();const g=fdGrupo(id);if(!g.length)return;const tab=TABT.externo.includes(g[0].tipo)?'externo':'interno',t=TABT[tab][w];
   const ex=g.find(x=>x.tipo===t);
   if(ex){if(g.length===1){toast('Un factor necesita al menos una opción. Para quitarlo usa la papelera.',true);return}FD=FD.filter(x=>x.id!==ex.id)}
@@ -84,10 +84,10 @@ function fdBorrarFactor(id){fdStart();const g=fdGrupo(id);if(!g.length)return;
   const n=g.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
   if(!confirm(`¿Quitar este factor del aspecto?${n?`\n\nTiene ${n} riesgo(s)/oportunidad(es) enlazados que también se eliminarán al aplicar los cambios.`:''}`))return;
   const ids=new Set(g.map(f=>f.id));FD=FD.filter(f=>!ids.has(f.id));render()}
-function fdBorrarAspecto(tab,cat){fdStart();const T=TABT[tab];const fs=FD.filter(f=>f.cat===cat&&T.includes(f.tipo));
+function fdBorrarAspecto(tab,cat){fdStart();const T=TABT[tab];const fs=FD.filter(f=>(f.cat||'(sin categoría)')===cat&&T.includes(f.tipo));
   const n=fs.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
   if(!confirm(`¿Eliminar el aspecto «${cat}» con sus ${fs.length} factor(es)?${n?`\n\nImplica eliminar ${n} riesgo(s)/oportunidad(es) enlazados al aplicar los cambios.`:''}`))return;
-  FD=FD.filter(f=>!(f.cat===cat&&T.includes(f.tipo)));FE[tab]=FE[tab].filter(c=>c!==cat);render()}
+  FD=FD.filter(f=>!((f.cat||'(sin categoría)')===cat&&T.includes(f.tipo)));FE[tab]=FE[tab].filter(c=>c!==cat);render()}
 function fdDiff(){
   const m0=Object.fromEntries(D.factors.map(f=>[f.id,f])),m1=Object.fromEntries((FD||D.factors).map(f=>[f.id,f]));
   const nuevos=(FD||[]).filter(f=>!m0[f.id]),borr=D.factors.filter(f=>!m1[f.id]);
@@ -143,20 +143,20 @@ function matrizAspectos(tab,cols){
   const dirty=fdDirty();
   const q=c=>c.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
   return `<div class="kpis">${kk(cats.length,'aspectos')}${kk(fs.length,'factores')}${kk(fs.filter(f=>f.tipo===T[0]).length,pl2(cols[0]))}${kk(fs.filter(f=>f.tipo===T[1]).length,pl2(cols[1]))}${kk(sinEv,'sin evaluar',1)}</div>
-  <div class="bar"><button class="btn" onclick="aspectoNuevo('${tab}')">+ Nuevo aspecto</button>
-   <span class="mut">Pulsa en las columnas de la derecha para cambiar el tipo de un factor.</span></div>
+  <div class="bar"><button class="btn pri" onclick="aspectoNuevo('${tab}')">+ Nuevo aspecto</button>
+   <span class="mut">Dentro de cada aspecto, «+ Factor» añade un factor nuevo. Pulsa en las columnas de la derecha para cambiar su tipo.</span></div>
   ${dirty?`<div class="pend"><b>Cambios sin aplicar.</b> No afectan a las demás pestañas hasta que los apliques.
     <span style="margin-left:auto"></span><button class="btn danger" onclick="FDNEXT=null;fdDeshacer()">Deshacer</button><button class="btn pri" onclick="fdDialog(null)">Revisar y aplicar…</button></div>`:''}
-  ${plBar}<div class="card scroll"><table class="asp"><colgroup><col style="width:58%"><col style="width:13%"><col style="width:13%"><col style="width:16%"></colgroup>
+  ${plBar}<div class="card scroll"><table class="asp"><colgroup><col style="width:50%"><col style="width:11%"><col style="width:11%"><col style="width:28%"></colgroup>
   <thead><tr><th>Aspectos</th><th class="xx">${cols[0]}</th><th class="xx">${cols[1]}</th><th></th></tr></thead>
   ${cats.map(c=>{const l=fs.filter(f=>(f.cat||'(sin categoría)')===c);
     const txt=[...new Set(l.map(f=>f.texto))];
     const n0=l.filter(f=>f.tipo===T[0]).length,n1=l.filter(f=>f.tipo===T[1]).length;
     return `<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td><span class="chev"></span>${esc(c)} <span class="mut" style="font-weight:400">· ${txt.length}</span></td><td class="xx mut">${n0}</td><td class="xx mut">${n1}</td>
-      <td class="xx" onclick="event.stopPropagation()"><button class="ed" title="Añadir factor a este aspecto" onclick="factorNuevo('${tab}','${q(c)}')">＋</button><button class="ed" title="Renombrar aspecto" onclick="aspectoRenombrar('${tab}','${q(c)}')">✎</button><button class="ed" title="Eliminar aspecto" onclick="fdBorrarAspecto('${tab}','${q(c)}')">🗑</button></td></tr>
+      <td class="xx" onclick="event.stopPropagation()"><button class="btn sm pri" onclick="factorNuevo('${tab}','${q(c)}')">+ Factor</button> <button class="btn sm" onclick="aspectoRenombrar('${tab}','${q(c)}')">Renombrar</button> <button class="btn sm danger" onclick="fdBorrarAspecto('${tab}','${q(c)}')">Eliminar</button></td></tr>
     ${txt.map(t=>{const g=l.filter(f=>f.texto===t),id=g[0].id;
       return `<tr class="it"><td>${esc(t)}</td><td class="xx tg" title="Clic para cambiar" onclick="fdToggle('${id}',0)">${g.some(f=>f.tipo===T[0])?'X':'·'}</td><td class="xx tg" title="Clic para cambiar" onclick="fdToggle('${id}',1)">${g.some(f=>f.tipo===T[1])?'X':'·'}</td>
-      <td class="xx"><button class="ed" title="Editar factor" onclick="factorEditar('${id}')">✎</button><button class="ed" title="Quitar factor" onclick="fdBorrarFactor('${id}')">🗑</button></td></tr>`}).join('')}</tbody>`}).join('')}
+      <td class="xx"><button class="btn sm" onclick="factorEditar('${id}')">Editar</button> <button class="btn sm danger" onclick="fdBorrarFactor('${id}')">Quitar</button></td></tr>`}).join('')}</tbody>`}).join('')}
   </table></div>`;
 }
 function externo(){return matrizAspectos('externo',['Amenaza','Oportunidad'])}
@@ -251,8 +251,7 @@ function partes(){
    <div class="card kpi"><b>${D.parties.filter(p=>p.tipo==='externa').length}</b><span>externos</span></div>
    <div class="card kpi"><b>${D.parties.filter(p=>p.tipo==='interna').length}</b><span>internos</span></div>
    <div class="card kpi"><b class="${sinReq?'warn':''}">${sinReq}</b><span>sin requisitos para el sistema</span></div>
-   <div class="card kpi"><b class="${sinExp?'warn':''}">${sinExp}</b><span>sin expectativas</span></div></div>
-  <div class="bar"><button class="btn" onclick="editar('party',null)">+ Añadir grupo de interés</button></div>`+plBar+`<div class="card scroll"><table class="asp"><colgroup><col style="width:16%"><col style="width:28%"><col style="width:28%"><col style="width:28%"></colgroup>
+   <div class="card kpi"><b class="${sinExp?'warn':''}">${sinExp}</b><span>sin expectativas</span></div></div>`+`<div class="bar"><button class="btn" onclick="plegar(true)">Desplegar todo</button><button class="btn" onclick="plegar(false)">Plegar todo</button><button class="btn pri" style="margin-left:auto" onclick="editar('party',null)">+ Añadir grupo de interés</button></div>`+`<div class="card scroll"><table class="asp"><colgroup><col style="width:16%"><col style="width:28%"><col style="width:28%"><col style="width:28%"></colgroup>
   <thead><tr><th>Grupos de interés</th><th>Necesidades</th><th>Expectativas</th><th>Requisitos para el Sistema</th></tr></thead>
   ${g.map(([k,n])=>{const l=D.parties.filter(p=>p.tipo===k);
     return `<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="4"><span class="chev"></span>${n} <span class="mut" style="font-weight:400">· ${l.length}</span></td></tr>
@@ -611,7 +610,7 @@ const KIND={
       if(!o.c0&&!o.c1)return 'Elige al menos una opción';
       fdStart();const T=TABT[m.pre.tab];
       if(!m.id){
-        [o.c0&&T[0],o.c1&&T[1]].filter(Boolean).forEach(t=>FD.push({id:nid('F'),tipo:t,texto:o.texto.trim(),cat:m.pre.cat,proceso:o.proceso||''}));
+        [o.c0&&T[0],o.c1&&T[1]].filter(Boolean).forEach(t=>FD.push({id:nid('F'),tipo:t,texto:o.texto.trim(),cat:m.pre.cat==='(sin categoría)'?'':m.pre.cat,proceso:o.proceso||''}));
         FE[m.pre.tab]=FE[m.pre.tab].filter(c=>c!==m.pre.cat);
       }else{
         const g=fdGrupo(m.id);
@@ -628,7 +627,7 @@ const KIND={
       const existe=new Set([...FD.filter(f=>T.includes(f.tipo)).map(f=>f.cat),...FE[m.pre.tab]]);
       if(m.id){ // renombrar
         if(n!==m.pre.orig&&existe.has(n))return 'Ya existe un aspecto con ese nombre';
-        FD.forEach(f=>{if(f.cat===m.pre.orig&&T.includes(f.tipo))f.cat=n});
+        FD.forEach(f=>{if((f.cat||'(sin categoría)')===m.pre.orig&&T.includes(f.tipo))f.cat=n});
         FE[m.pre.tab]=FE[m.pre.tab].map(c=>c===m.pre.orig?n:c);
       }else{
         if(existe.has(n))return 'Ya existe un aspecto con ese nombre';

@@ -98,3 +98,5 @@ td.tg:hover{background:var(--green-pale)}
 .acchead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .accbox .fl input,.accbox .fl select,.accbox .fl textarea{background:var(--surface)}
 .mbox textarea{min-height:44px}
+
+.btn.sm{padding:2px 8px;font-size:12px;border-radius:6px;white-space:nowrap}
