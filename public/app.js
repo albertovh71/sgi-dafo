@@ -889,7 +889,7 @@ function pintarCiclo(){
   sel.innerHTML=CICLOS.map(c=>`<option value="${c.anio}" ${c.anio===CICLO?'selected':''}>Ciclo ${c.anio} · ${c.estado==='cerrado'?'cerrado':'abierto'}</option>`).join('');
   b.className='badge '+(RO?'cerrado':'abierto');b.textContent=RO?'Solo lectura':'Abierto';
   if(RO){const c=CICLOS.find(x=>x.anio===CICLO);
-    document.getElementById('view').insertAdjacentHTML('afterbegin',`<div class="robanner">🔒 <b>Ciclo ${esc(CICLO)} cerrado</b>${c&&c.cerrado?` el ${esc(c.cerrado.slice(0,10).split('-').reverse().join('/'))}`:''}. Solo lectura: es la evidencia del año. Puedes consultarlo y generar el Word de la revisión.</div>`)}
+    document.getElementById('view').insertAdjacentHTML('afterbegin',`<div class="robanner">🔒 <b>Ciclo ${esc(CICLO)} cerrado</b>${c&&c.cerrado?` el ${esc(c.cerrado.slice(0,10).split('-').reverse().join('/'))}`:''}. Solo lectura: es la evidencia del año. Puedes consultarlo y generar el Word de la revisión. Si necesitas corregir algo, puedes reabrirlo desde <b>Datos generales</b>.</div>`)}
 }
 function cambiarCiclo(c){
   if(c===CICLO)return;
@@ -901,7 +901,8 @@ function cicloCard(){
   return `<div class="card pad mt" style="max-width:760px"><h2>Ciclo ${esc(CICLO)} <span class="badge ${RO?'cerrado':'abierto'}">${RO?'cerrado':'abierto'}</span></h2>
    <p class="mut" style="margin-top:0">Cada año es un ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos y revisión). Al cerrarlo queda como evidencia, en solo lectura.</p>
    ${RO?`<p>Cerrado el ${esc((c.cerrado||'').slice(0,10).split('-').reverse().join('/'))}. ${sig?`Ya existe el ciclo ${esc(sig.anio)}.`:''}</p>
-     ${sig?`<button class="btn keep" onclick="cambiarCiclo('${sig.anio}')">Ir al ciclo ${esc(sig.anio)}</button>`:`<button class="btn pri keep" onclick="dialogCrearCiclo()">Crear ciclo ${n} a partir de este</button>`}`
+     ${sig?`<button class="btn keep" onclick="cambiarCiclo('${sig.anio}')">Ir al ciclo ${esc(sig.anio)}</button>`:`<button class="btn pri keep" onclick="dialogCrearCiclo()">Crear ciclo ${n} a partir de este</button>`}
+     <button class="btn keep" onclick="dialogReabrirCiclo()">Reabrir ciclo ${esc(CICLO)}…</button>`
     :`<button class="btn pri keep" onclick="dialogCerrarCiclo()">Cerrar ciclo ${esc(CICLO)}…</button>`}
   </div>`;
 }
@@ -911,11 +912,24 @@ function dialogCerrarCiclo(){
   const obj=D.objs.filter(o=>!o.objetivo).length, rev=revSecs().filter(x=>!x.auto&&revVacia(x)).length;
   const li=(n,t)=>`<li class="${n?'warn':''}"><b>${n}</b> ${t}</li>`;
   document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Cerrar el ciclo ${esc(CICLO)}</h2>
-   <p>Al cerrarlo, todo el ciclo (DAFO, partes, riesgos, oportunidades, objetivos y revisión) pasa a <b>solo lectura</b>. <b>No se puede reabrir desde la aplicación</b>; solo se puede reabrir desde el servidor.</p>
+   <p>Al cerrarlo, todo el ciclo (DAFO, partes, riesgos, oportunidades, objetivos y revisión) pasa a <b>solo lectura</b>. Si necesitas corregir algo, podrás <b>reabrirlo</b> desde esta misma pantalla.</p>
    <p class="mut" style="margin-bottom:4px">Estado actual (son avisos, no impiden cerrar):</p>
    <ul>${li(sinEv,'factores sin evaluar')}${li(sinVal,'riesgos sin valorar (P o G vacíos)')}${li(sinAcc,'elementos que exigen acción y no la tienen')}${li(obj,'líneas de objetivos por completar')}${li(rev,'apartados manuales de la revisión sin cumplimentar')}</ul>
    <div class="merr" id="merr"></div>
    <div class="mbtn"><span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn danger" onclick="cerrarCiclo()">Cerrar ciclo ${esc(CICLO)}</button></div></div></div>`;
+}
+function dialogReabrirCiclo(){
+  const sig=CICLOS.find(x=>+x.anio>+CICLO);
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Reabrir el ciclo ${esc(CICLO)}</h2>
+   <p>El ciclo volverá a ser editable. Cuando termines, puedes cerrarlo otra vez.</p>
+   ${sig?`<p class="warn"><b>Ojo:</b> el ciclo ${esc(sig.anio)} ya existe y se creó a partir de este. Los cambios que hagas ahora en ${esc(CICLO)} <b>no se copian</b> al ${esc(sig.anio)}.</p>`:''}
+   <p class="mut">Al reabrir, el ciclo deja de ser la evidencia firmada hasta que lo vuelvas a cerrar.</p>
+   <div class="merr" id="merr"></div>
+   <div class="mbtn"><span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="reabrirCiclo()">Reabrir ciclo ${esc(CICLO)}</button></div></div></div>`;
+}
+async function reabrirCiclo(){
+  try{await api('POST',`api/ciclos/${CICLO}/abrir`,{});cerrar();toast(`Ciclo ${CICLO} reabierto`);await boot(CICLO)}
+  catch(e){document.getElementById('merr').textContent='No se pudo reabrir: '+e.message}
 }
 async function cerrarCiclo(){
   try{await api('POST',`api/ciclos/${CICLO}/cerrar`,{});cerrar();toast(`Ciclo ${CICLO} cerrado`);await boot(CICLO)}

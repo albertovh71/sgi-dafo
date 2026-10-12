@@ -31,7 +31,7 @@ un riesgo u oportunidad puede enlazarse a varios factores (`fids`): la misma fra
 
 ## Ciclos anuales (histórico)
 Cada año es un **ciclo** completo (DAFO, partes, riesgos, oportunidades, objetivos y revisión por la dirección): una «foto» por año.
-- Un ciclo **cerrado** es de **solo lectura** (la API responde 409). **No se puede reabrir desde la aplicación**.
+- Un ciclo **cerrado** es de **solo lectura** (la API responde 409). Se puede **reabrir** desde Datos generales (`POST /api/ciclos/AAAA/abrir`); si más adelante se quiere restringir, basta con proteger esa ruta.
 - Crear el ciclo siguiente (solo desde uno cerrado): copia partes y factores (mismos ids), riesgos y oportunidades **sin valorar**
   (con la valoración anterior como referencia `prev`), las acciones **abiertas** continúan y las cerradas se quedan en el año anterior;
   objetivos nuevos con origen/indicador y el último resultado como referencia (si ya hay objetivos preparados para ese año, se respetan);

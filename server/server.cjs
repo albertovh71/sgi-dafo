@@ -5,7 +5,8 @@
 // Portabilidad: todos los datos están en DATA_DIR/sgi.db (un fichero) y se pueden volcar/cargar con /api/export e /api/import.
 //
 // CICLOS ANUALES (opción "foto anual"): cada año es un ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos,
-// revisión). Un ciclo cerrado es de solo lectura y NO se puede reabrir por la API: solo con `node server/ciclo.cjs reabrir AAAA`.
+// revisión). Un ciclo cerrado es de solo lectura; se reabre con POST /api/ciclos/AAAA/abrir (o `node server/ciclo.cjs reabrir AAAA`).
+// Si más adelante se quiere restringir la reapertura, basta con quitar/proteger la ruta /abrir.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -213,6 +214,12 @@ const server = http.createServer(async (req, res) => {
         const o = getCiclo.get(seg[1]);
         if (!o) return send(res, 404, { error: 'el ciclo no existe' });
         if (o.estado !== 'cerrado') db.prepare("UPDATE ciclos SET estado = 'cerrado', cerrado = ? WHERE anio = ?").run(now(), seg[1]);
+        return send(res, 200, getCiclo.get(seg[1]));
+      }
+      if (m === 'POST' && seg.length === 3 && seg[2] === 'abrir' && YEAR.test(seg[1])) {
+        const o = getCiclo.get(seg[1]);
+        if (!o) return send(res, 404, { error: 'el ciclo no existe' });
+        if (o.estado !== 'abierto') db.prepare("UPDATE ciclos SET estado = 'abierto', cerrado = NULL WHERE anio = ?").run(seg[1]);
         return send(res, 200, getCiclo.get(seg[1]));
       }
       return send(res, 404, { error: 'no encontrado' });
