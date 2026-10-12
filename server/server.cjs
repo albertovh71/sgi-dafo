@@ -44,6 +44,10 @@ function check(col, d) {
     if (d.estado !== undefined && !ESTADOS.includes(d.estado)) return 'estado no válido';
     for (const k of col === 'risks' ? ['P', 'G', 'Pr', 'Gr'] : ['V', 'R']) if (!esc13(d[k])) return `${k} debe ser 1, 2 o 3`;
   }
+  if ((col === 'risks' || col === 'opps') && d.acciones !== undefined) {
+    if (!Array.isArray(d.acciones) || d.acciones.length > 50) return 'acciones no válidas';
+    for (const a of d.acciones) if (typeof a !== 'object' || a === null || !ESTADOS.includes(a.estado || '')) return 'estado de acción no válido';
+  }
   if (col === 'factors' && !TIPO_FACTOR.includes(d.tipo)) return 'tipo de factor no válido';
   if (col === 'parties' && !['externa', 'interna'].includes(d.tipo)) return 'tipo de parte no válido';
   return null;

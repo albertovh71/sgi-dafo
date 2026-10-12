@@ -21,19 +21,29 @@ const procSel=()=>`<select onchange="S.proceso=this.value;render()"><option valu
 const okProc=p=>!S.proceso||proc(p)===S.proceso;
 const fecha=f=>/^\d{4}-\d\d(-\d\d)?$/.test(f)?f.split('-').reverse().join('/'):f;
 const finPlazo=p=>/^\d{4}-\d\d$/.test(p)?p+'-31':p;
-const vencido=x=>x.plazo&&abierto(x.estado)&&/^\d{4}-/.test(x.plazo)&&finPlazo(x.plazo)<new Date().toISOString().slice(0,10);
+const hoy=()=>new Date().toISOString().slice(0,10);
+const vencidoA=a=>!!(a&&a.plazo&&a.estado!=='Cerrada'&&/^\d{4}-/.test(a.plazo)&&finPlazo(a.plazo)<hoy());
+const ACC0=()=>({accion:'',resp:'',plazo:'',estado:'',coment:''});
+const accs=x=>x.acciones||[];
+const tieneAcc=x=>accs(x).some(a=>(a.accion||'').trim());
+const vencido=x=>accs(x).some(vencidoA);
+function normAcc(x){ // datos antiguos: una sola acción en el propio registro → lista de acciones
+  if(!Array.isArray(x.acciones)){const a={accion:x.accion||'',resp:x.resp||'',plazo:x.plazo||'',estado:x.estado||'',coment:x.coment||''};x.acciones=(a.accion||a.resp||a.plazo||a.coment)?[a]:[]}
+  delete x.accion;delete x.resp;delete x.plazo;delete x.coment;delete x.proceso;delete x.factor;delete x.plazoRaw;return x}
+function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.estado==='Cerrada')?'Cerrada':(a.some(z=>z.estado)?'En curso':'')}
 const evaluado=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
 
 function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=r.P*r.G;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
 function setO(i,f,v){const o=D.opps[i];o[f]=f==='estado'?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
+function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
 function evaluar(id){const f=fm[id];
-  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:1,G:1,R:1,accion:'',resp:'',plazo:'',estado:'',coment:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
-  else{const o={id:nid('O'),fid:id,accion:'',V:null,R:null,VR:0,resp:'',plazo:'',estado:'',coment:''};D.opps.push(o);guardar('opps',o);S.tab='oport'}
+  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
+  else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);S.tab='oport'}
   S.estado='todos';S.proceso='';render()}
 
 const TABS=[['general','Datos generales'],['partes','Partes'],['externo','Externo'],['interno','Interno'],['dafo','DAFO'],['riesgos','Riesgos'],['oport','Oportunidades'],null,['procesos','Procesos'],['objetivos','Objetivos'],['revision','Revisión dirección'],null,['flujo','Flujo'],['criterios','Criterios'],['coherencia','Coherencia']];
 function render(){
-  document.getElementById('tabs').innerHTML=TABS.map(t=>t?`<button class="${S.tab===t[0]?'on':''}" onclick="S.tab='${t[0]}';render()">${t[1]}</button>`:'<span class="sep"></span>').join('');
+  document.getElementById('tabs').innerHTML=TABS.map(t=>t?`<button class="${S.tab===t[0]?'on':''}" onclick="irTab('${t[0]}')">${t[1]}</button>`:'<span class="sep"></span>').join('');
   document.getElementById('wrap').className='wrap'+(S.tab==='riesgos'||S.tab==='oport'?' wide':'');
   document.getElementById('view').innerHTML=VIEWS[S.tab]();
 }
@@ -57,28 +67,106 @@ function general(){
    <tr><th>Participantes</th><td>${m.participantes.map(esc).join('<br>')||'<span class="mut">—</span>'}</td></tr></tbody></table></div>`;
 }
 const pl2=c=>c.toLowerCase().replace(/d$/,'des')+(/d$/.test(c)?'':'s');
-function matrizAspectos(tipos,cols){
-  const fs=D.factors.filter(f=>tipos.includes(f.tipo));
-  const cats=[...new Set(fs.map(f=>f.cat||'(sin categoría)'))];
+// ---- Borrador de cambios en factores (Externo / Interno): nada se aplica hasta confirmar
+let FD=null, FE={externo:[],interno:[]};
+const fview=()=>FD||D.factors;
+const fdStart=()=>{if(!FD){FD=JSON.parse(JSON.stringify(D.factors));FE={externo:[],interno:[]}}};
+const fdDirty=()=>!!FD&&(JSON.stringify(FD)!==JSON.stringify(D.factors)||FE.externo.length>0||FE.interno.length>0);
+const TABT={externo:['A','O'],interno:['D','F']};
+function fdGrupo(id){const f=FD.find(x=>x.id===id);if(!f)return [];const tab=(TABT.externo.includes(f.tipo))?'externo':'interno';
+  return FD.filter(x=>x.cat===f.cat&&x.texto===f.texto&&TABT[tab].includes(x.tipo))}
+function fdToggle(id,w){fdStart();const g=fdGrupo(id);if(!g.length)return;const tab=TABT.externo.includes(g[0].tipo)?'externo':'interno',t=TABT[tab][w];
+  const ex=g.find(x=>x.tipo===t);
+  if(ex){if(g.length===1){toast('Un factor necesita al menos una opción. Para quitarlo usa la papelera.',true);return}FD=FD.filter(x=>x.id!==ex.id)}
+  else FD.push({id:nid('F'),tipo:t,texto:g[0].texto,cat:g[0].cat,proceso:g[0].proceso||''});
+  render()}
+function fdBorrarFactor(id){fdStart();const g=fdGrupo(id);if(!g.length)return;
+  const n=g.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
+  if(!confirm(`¿Quitar este factor del aspecto?${n?`\n\nTiene ${n} riesgo(s)/oportunidad(es) enlazados que también se eliminarán al aplicar los cambios.`:''}`))return;
+  const ids=new Set(g.map(f=>f.id));FD=FD.filter(f=>!ids.has(f.id));render()}
+function fdBorrarAspecto(tab,cat){fdStart();const T=TABT[tab];const fs=FD.filter(f=>f.cat===cat&&T.includes(f.tipo));
+  const n=fs.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
+  if(!confirm(`¿Eliminar el aspecto «${cat}» con sus ${fs.length} factor(es)?${n?`\n\nImplica eliminar ${n} riesgo(s)/oportunidad(es) enlazados al aplicar los cambios.`:''}`))return;
+  FD=FD.filter(f=>!(f.cat===cat&&T.includes(f.tipo)));FE[tab]=FE[tab].filter(c=>c!==cat);render()}
+function fdDiff(){
+  const m0=Object.fromEntries(D.factors.map(f=>[f.id,f])),m1=Object.fromEntries((FD||D.factors).map(f=>[f.id,f]));
+  const nuevos=(FD||[]).filter(f=>!m0[f.id]),borr=D.factors.filter(f=>!m1[f.id]);
+  const mod=(FD||[]).filter(f=>m0[f.id]&&JSON.stringify(f)!==JSON.stringify(m0[f.id]));
+  const rb=D.risks.filter(r=>borr.some(f=>f.id===r.fid)),ob=D.opps.filter(o=>borr.some(f=>f.id===o.fid));
+  return {nuevos,borr,mod,rb,ob};
+}
+function fdDialog(next){
+  const d=fdDiff(),vacios=FE.externo.length+FE.interno.length;
+  const li=(a,t)=>a.length?`<li><b>${a.length}</b> ${t}</li>`:'';
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog">
+   <h2>Hay cambios sin aplicar en los factores</h2>
+   <p>Estos cambios afectan al resto de pestañas (DAFO, Riesgos, Oportunidades, Procesos, Coherencia…). ¿Quieres hacerlos efectivos?</p>
+   <ul>${li(d.nuevos,'factor(es) nuevo(s)')}${li(d.mod,'factor(es) modificado(s)')}${li(d.borr,'factor(es) eliminado(s)')}
+   ${d.rb.length||d.ob.length?`<li class="warn"><b>${d.rb.length}</b> riesgo(s) y <b>${d.ob.length}</b> oportunidad(es) enlazados se eliminarán también</li>`:''}
+   ${vacios?`<li class="mut">${vacios} aspecto(s) nuevo(s) sin factores no se guardarán</li>`:''}</ul>
+   <div class="mbtn"><button class="btn" onclick="fdSeguir()">Seguir editando</button><span style="flex:1"></span>
+    <button class="btn danger" onclick="fdDeshacer()">Deshacer cambios</button><button class="btn pri" onclick="fdAplicar()">Aplicar cambios</button></div></div></div>`;
+  FDNEXT=next||null;
+}
+let FDNEXT=null;
+function fdSeguir(){FDNEXT=null;cerrar()}
+function fdDeshacer(){FD=null;FE={externo:[],interno:[]};const n=FDNEXT;FDNEXT=null;cerrar();toast('Cambios deshechos');n?n():render()}
+async function fdAplicar(){
+  const d=fdDiff(),n=FDNEXT;FDNEXT=null;
+  try{
+    for(const f of d.nuevos.concat(d.mod))await api('PUT',`api/factors/${encodeURIComponent(f.id)}`,f);
+    for(const r of d.rb)await api('DELETE',`api/risks/${encodeURIComponent(r.id)}`);
+    for(const o of d.ob)await api('DELETE',`api/opps/${encodeURIComponent(o.id)}`);
+    for(const f of d.borr)await api('DELETE',`api/factors/${encodeURIComponent(f.id)}`);
+    D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r));D.opps=D.opps.filter(o=>!d.ob.includes(o));
+    FD=null;FE={externo:[],interno:[]};reindex();cerrar();toast('Cambios aplicados');n?n():render();
+  }catch(e){FD=null;FE={externo:[],interno:[]};cerrar();toast('NO SE HAN APLICADO TODOS LOS CAMBIOS: '+e.message+'. Se han recargado los datos.',true);await boot()}
+}
+function irTab(t){
+  if(fdDirty()&&t!==S.tab){fdDialog(()=>{S.tab=t;render()});return}
+  if(!fdDirty())FD=null;
+  S.tab=t;render();
+}
+window.addEventListener('beforeunload',e=>{if(fdDirty()){e.preventDefault();e.returnValue=''}});
+function aspectoNuevo(tab){editar('aspecto',null,{tab})}
+function aspectoRenombrar(tab,cat){editar('aspecto',tab+'|'+cat,{tab,nombre:cat,orig:cat})}
+function factorNuevo(tab,cat){editar('fdraft',null,{tab,cat,texto:'',proceso:'',c0:true,c1:false})}
+function factorEditar(id){const g=(FD||D.factors).filter(f=>f.id===id)[0];if(!g)return;
+  fdStart();const grp=fdGrupo(id),tab=TABT.externo.includes(g.tipo)?'externo':'interno',T=TABT[tab];
+  editar('fdraft',id,{tab,cat:g.cat,texto:g.texto,proceso:g.proceso||'',c0:grp.some(x=>x.tipo===T[0]),c1:grp.some(x=>x.tipo===T[1])})}
+
+function matrizAspectos(tab,cols){
+  const T=TABT[tab], fs=fview().filter(f=>T.includes(f.tipo));
+  const cats=[...new Set([...fs.map(f=>f.cat||'(sin categoría)'),...FE[tab]])];
   const sinEv=fs.filter(f=>!evaluado(f)).length;
   const kk=(n,t,w)=>`<div class="card kpi"><b class="${w&&n?'warn':''}">${n}</b><span>${t}</span></div>`;
-  return `<div class="kpis">${kk(cats.length,'categorías de aspectos')}${kk(fs.length,'factores')}${kk(fs.filter(f=>f.tipo===tipos[0]).length,pl2(cols[0]))}${kk(fs.filter(f=>f.tipo===tipos[1]).length,pl2(cols[1]))}${kk(sinEv,'sin evaluar',1)}</div>`+plBar+`<div class="card scroll"><table class="asp"><colgroup><col style="width:72%"><col style="width:14%"><col style="width:14%"></colgroup>
-  <thead><tr><th>Aspectos</th><th class="xx">${cols[0]}</th><th class="xx">${cols[1]}</th></tr></thead>
+  const dirty=fdDirty();
+  const q=c=>c.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  return `<div class="kpis">${kk(cats.length,'aspectos')}${kk(fs.length,'factores')}${kk(fs.filter(f=>f.tipo===T[0]).length,pl2(cols[0]))}${kk(fs.filter(f=>f.tipo===T[1]).length,pl2(cols[1]))}${kk(sinEv,'sin evaluar',1)}</div>
+  <div class="bar"><button class="btn" onclick="aspectoNuevo('${tab}')">+ Nuevo aspecto</button>
+   <span class="mut">Pulsa en las columnas de la derecha para cambiar el tipo de un factor.</span></div>
+  ${dirty?`<div class="pend"><b>Cambios sin aplicar.</b> No afectan a las demás pestañas hasta que los apliques.
+    <span style="margin-left:auto"></span><button class="btn danger" onclick="FDNEXT=null;fdDeshacer()">Deshacer</button><button class="btn pri" onclick="fdDialog(null)">Revisar y aplicar…</button></div>`:''}
+  ${plBar}<div class="card scroll"><table class="asp"><colgroup><col style="width:58%"><col style="width:13%"><col style="width:13%"><col style="width:16%"></colgroup>
+  <thead><tr><th>Aspectos</th><th class="xx">${cols[0]}</th><th class="xx">${cols[1]}</th><th></th></tr></thead>
   ${cats.map(c=>{const l=fs.filter(f=>(f.cat||'(sin categoría)')===c);
     const txt=[...new Set(l.map(f=>f.texto))];
-    const n0=l.filter(f=>f.tipo===tipos[0]).length,n1=l.filter(f=>f.tipo===tipos[1]).length;
-    return `<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td><span class="chev"></span>${esc(c)} <span class="mut" style="font-weight:400">· ${txt.length}</span></td><td class="xx mut">${n0}</td><td class="xx mut">${n1}</td></tr>
-    ${txt.map(t=>`<tr class="it"><td>${esc(t)}</td><td class="xx">${l.some(f=>f.texto===t&&f.tipo===tipos[0])?'X':''}</td><td class="xx">${l.some(f=>f.texto===t&&f.tipo===tipos[1])?'X':''}</td></tr>`).join('')}</tbody>`}).join('')}
+    const n0=l.filter(f=>f.tipo===T[0]).length,n1=l.filter(f=>f.tipo===T[1]).length;
+    return `<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td><span class="chev"></span>${esc(c)} <span class="mut" style="font-weight:400">· ${txt.length}</span></td><td class="xx mut">${n0}</td><td class="xx mut">${n1}</td>
+      <td class="xx" onclick="event.stopPropagation()"><button class="ed" title="Añadir factor a este aspecto" onclick="factorNuevo('${tab}','${q(c)}')">＋</button><button class="ed" title="Renombrar aspecto" onclick="aspectoRenombrar('${tab}','${q(c)}')">✎</button><button class="ed" title="Eliminar aspecto" onclick="fdBorrarAspecto('${tab}','${q(c)}')">🗑</button></td></tr>
+    ${txt.map(t=>{const g=l.filter(f=>f.texto===t),id=g[0].id;
+      return `<tr class="it"><td>${esc(t)}</td><td class="xx tg" title="Clic para cambiar" onclick="fdToggle('${id}',0)">${g.some(f=>f.tipo===T[0])?'X':'·'}</td><td class="xx tg" title="Clic para cambiar" onclick="fdToggle('${id}',1)">${g.some(f=>f.tipo===T[1])?'X':'·'}</td>
+      <td class="xx"><button class="ed" title="Editar factor" onclick="factorEditar('${id}')">✎</button><button class="ed" title="Quitar factor" onclick="fdBorrarFactor('${id}')">🗑</button></td></tr>`}).join('')}</tbody>`}).join('')}
   </table></div>`;
 }
-function externo(){return `<div class="bar"><span class="mut">Aspectos externos agrupados por categoría, marcados como amenaza u oportunidad.</span><button class="btn" style="margin-left:auto" onclick="editar('factor',null,{tipo:'A'})">+ Añadir factor</button></div>`+matrizAspectos(['A','O'],['Amenaza','Oportunidad'])}
-function interno(){return `<div class="bar"><span class="mut">Aspectos internos agrupados por categoría, marcados como debilidad o fortaleza.</span><button class="btn" style="margin-left:auto" onclick="editar('factor',null,{tipo:'D'})">+ Añadir factor</button></div>`+matrizAspectos(['D','F'],['Debilidad','Fortaleza'])}
+function externo(){return matrizAspectos('externo',['Amenaza','Oportunidad'])}
+function interno(){return matrizAspectos('interno',['Debilidad','Fortaleza'])}
 
 function flujo(){
   const dafoN=D.factors.length, ev=D.factors.filter(evaluado).length;
-  const rk=D.risks, req=rk.filter(requiere), reqSin=req.filter(r=>!r.accion&&!r.just);
+  const rk=D.risks, req=rk.filter(requiere), reqSin=req.filter(r=>!tieneAcc(r)&&!r.just);
   const cer=rk.filter(r=>r.estado==='Cerrada'), cerRes=cer.filter(r=>r.Rr!=null);
-  const op=D.opps.filter(o=>o.V), opA=op.filter(o=>o.accion);
+  const op=D.opps.filter(o=>o.V), opA=op.filter(tieneAcc);
   const step=(n,t,big,txt,w)=>`<div class="card step"><span class="n">${n}</span> <b>${t}</b><b class="big ${w?'warn':''}">${big}</b><span class="mut">${txt}</span></div>`;
   return `<p class="mut" style="margin-top:0">El recorrido de un factor, con los números actuales. Cada paso es una pestaña de la app.</p>
   <div class="flow">
@@ -150,7 +238,7 @@ function dafo(){
     return `<div class="card scroll mt"><table class="asp"><colgroup><col style="width:38%"><col style="width:12%"><col style="width:38%"><col style="width:12%"></colgroup>
     <thead><tr><th style="color:${TIPOS[a].c}">${ta}</th><th class="xx">Eval. <span class="nuevo">nuevo</span></th><th style="color:${TIPOS[b].c}">${tb}</th><th class="xx">Eval. <span class="nuevo">nuevo</span></th></tr></thead>
     ${grupos||'<tbody><tr><td colspan="4" class="mut">Sin elementos para este proceso</td></tr></tbody>'}</table></div>`};
-  return `<div class="bar"><span class="mut">Análisis de ${esc(fecha(m.fecha))||'—'}</span><span style="margin-left:auto">${procSel()} <button class="btn" onclick="editar('factor',null)">+ Añadir factor</button></span></div>
+  return `<div class="bar"><span class="mut">Análisis de ${esc(fecha(m.fecha))||'—'}</span><span style="margin-left:auto">${procSel()}</span></div>
   ${plBar}${par('D','A','DEBILIDADES','AMENAZAS')}${par('F','O','FORTALEZAS','OPORTUNIDADES')}
   <p class="mut">El <b>proceso</b> es el capítulo plegable; "Evaluar" indica si el factor ya tiene fila en Riesgos u Oportunidades.</p>`;
 }
@@ -174,16 +262,36 @@ function partes(){
 function porProc(l,key,cols,fn,abiertoFn){
   const orden=[...Object.values(PROCS),'(sin proceso)'];
   const gs=orden.map(p=>[p,l.filter(x=>proc(key(x))===p)]).filter(([,v])=>v.length);
-  return gs.map(([p,v])=>`<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="${cols}"><span class="chev"></span>${esc(p)} <span class="mut" style="font-weight:400">· ${v.length}${abiertoFn?` · ${v.filter(abiertoFn).length} abiertos`:''}</span></td></tr>${v.map(x=>fn(x).replace('<tr>','<tr class="it">')).join('')}</tbody>`).join('')||`<tbody><tr><td colspan="${cols}" class="mut">Sin elementos con este filtro</td></tr></tbody>`;
+  return gs.map(([p,v])=>`<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="${cols}"><span class="chev"></span>${esc(p)} <span class="mut" style="font-weight:400">· ${v.length}${abiertoFn?` · ${v.filter(abiertoFn).length} abiertos`:''}</span></td></tr>${v.map(x=>fn(x).replace(/<tr>/g,'<tr class="it">')).join('')}</tbody>`).join('')||`<tbody><tr><td colspan="${cols}" class="mut">Sin elementos con este filtro</td></tr></tbody>`;
 }
-function ordenSel(){return `<select onchange="S.orden=this.value;render()"><option value="excel" ${S.orden==='excel'?'selected':''}>Orden del Excel</option><option value="R" ${S.orden==='R'?'selected':''}>Mayor R primero</option></select>`}
+function ordenSel(){return `<select onchange="S.orden=this.value;render()"><option value="excel" ${S.orden==='excel'?'selected':''}>Orden original</option><option value="R" ${S.orden==='R'?'selected':''}>Mayor R primero</option></select>`}
 function riesgos(){
   const idx=D.risks.map((r,i)=>[r,i]);
   const l=idx.filter(([r])=>okProc(rp(r))&&(S.estado==='todos'||(S.estado==='abiertos'?abierto(r.estado):r.estado===S.estado)));
   if(S.orden==='R')l.sort((a,b)=>(b[0].R||0)-(a[0].R||0));
   const abiertos=D.risks.filter(r=>abierto(r.estado)&&okProc(rp(r)));
   const sel=(i,f,cur,opts)=>`<select onchange="setR(${i},'${f}',this.value)">${opts.map(o=>`<option value="${o}" ${String(cur??'')===String(o)?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
-  const sinAccion=D.risks.filter(r=>requiere(r)&&!r.accion&&!r.just).length;
+  const selA=(i,j,cur)=>`<select onchange="setAcc('risks',${i},${j},'estado',this.value)">${ESTADOS.map(o=>`<option value="${o}" ${(cur||'')===o?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
+  const sinAccion=D.risks.filter(r=>requiere(r)&&!tieneAcc(r)&&!r.just).length;
+  const fila=([r,i])=>{
+    const A=accs(r).length?accs(r):[null], n=A.length, rs=n>1?` rowspan="${n}"`:'';
+    const g3=r.G===3&&r.R<4;
+    const regla=g3?`<span class="amb">G=3: acción o justificar</span>`:(requiere(r)?`<span class="amb">R≥4: acción</span>`:'<span class="mut">vigilar</span>');
+    const falta=(requiere(r)&&!tieneAcc(r)&&!r.just)?`<div class="todo" style="padding:2px 6px">falta acción${g3?' o justificación':''}</div>`:'';
+    const cierreSinRes=r.estado==='Cerrada'&&r.Rr==null;
+    return A.map((a,j)=>{
+      const first=j===0, last=j===n-1;
+      const add=last?`<div><button class="ed" onclick="editar('risk','${r.id}',{addAcc:1})">+ acción</button></div>`:'';
+      const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
+        <td${rs}>${sel(i,'P',r.P,[1,2,3])}</td><td${rs}>${sel(i,'G',r.G,[1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R}</span></td>`:'';
+      const mid=a?`<td>${nl(a.accion)||'<span class="mut">—</span>'}${add}</td><td>${esc(a.resp)}</td>
+        <td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td>
+        <td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
+        :`<td>${falta||'<span class="mut">—</span>'}${requiere(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td></td><td></td><td>${sel(i,'estado',r.estado,ESTADOS)}</td><td></td>`;
+      const right=first?`<td${rs}>P' ${sel(i,'Pr',r.Pr,['',1,2,3])}<br>G' ${sel(i,'Gr',r.Gr,['',1,2,3])} ${r.Rr!=null?`<span class="pill ${lvl(r.Rr)}">${r.Rr}</span>`:''}
+        ${cierreSinRes?'<div class="todo" style="padding:2px 6px;margin-top:4px">cerrado sin residual</div>':''}</td><td${rs}>${regla}</td>`:'';
+      return `<tr>${left}${mid}${right}</tr>`}).join('');
+  };
   return `<div class="kpis">
    <div class="card kpi"><b>${D.risks.length}</b><span>riesgos</span></div>
    <div class="card kpi"><b>${D.risks.filter(r=>r.estado==='En curso').length}</b><span>en curso</span></div>
@@ -192,24 +300,8 @@ function riesgos(){
    <div class="card kpi"><b class="${sinAccion?'warn':''}">${sinAccion}</b><span>exigen acción y no la tienen</span></div></div>
   <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('risk',null)">+ Añadir riesgo</button></div>
-  ${plBar}<div class="card scroll"><table class="asp fit"><colgroup><col style="width:12.5%"><col style="width:10%"><col style="width:9%"><col style="width:3%"><col style="width:3%"><col style="width:3.5%"><col style="width:15%"><col style="width:7.5%"><col style="width:5%"><col style="width:6.5%"><col style="width:13%"><col style="width:6%"><col style="width:6%"></colgroup><thead><tr><th>Factor de riesgo</th><th>Causa</th><th>Efecto</th><th>P</th><th>G</th><th>R</th><th>Acción</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th><th>Residual P'×G' <span class="nuevo">nuevo</span></th><th>Regla <span class="nuevo">nuevo</span></th></tr></thead>
-  ${porProc(l,x=>rp(x[0]),13,([r,i])=>{
-    const g3=r.G===3&&r.R<4;
-    const regla=g3?`<span class="amb">G=3: acción o justificar</span>`:(requiere(r)?`<span class="amb">R≥4: acción</span>`:'<span class="mut">vigilar</span>');
-    const falta=(requiere(r)&&!r.accion&&!r.just)?`<div class="todo" style="padding:2px 6px">falta acción${g3?' o justificación':''}</div>`:'';
-    const cierreSinRes=r.estado==='Cerrada'&&r.Rr==null;
-    return `<tr><td><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td>
-   <td>${esc(r.causa)}</td><td>${esc(r.efecto)}</td>
-   <td>${sel(i,'P',r.P,[1,2,3])}</td><td>${sel(i,'G',r.G,[1,2,3])}</td>
-   <td><span class="pill ${lvl(r.R)}">${r.R}</span></td>
-   <td>${nl(r.accion)||falta||'<span class="mut">—</span>'}${(requiere(r)&&!r.accion)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}</td>
-   <td>${esc(r.resp)}</td>
-   <td style="color:${vencido(r)?'var(--bad)':''}">${esc(fecha(r.plazo))}${vencido(r)?'<div style="font-size:11px">vencida</div>':''}</td>
-   <td>${sel(i,'estado',r.estado,ESTADOS)}</td>
-   <td style="color:var(--muted)">${nl(r.coment)}</td>
-   <td>P' ${sel(i,'Pr',r.Pr,['',1,2,3])}<br>G' ${sel(i,'Gr',r.Gr,['',1,2,3])} ${r.Rr!=null?`<span class="pill ${lvl(r.Rr)}">${r.Rr}</span>`:''}
-     ${cierreSinRes?'<div class="todo" style="padding:2px 6px;margin-top:4px">cerrado sin residual</div>':''}</td>
-   <td>${regla}</td></tr>`},x=>abierto(x[0].estado))}
+  ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[11.5,9,8,5.5,5.5,3.5,14,7,5,6.5,11.5,6,6.5].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de riesgo</th><th>Causa</th><th>Efecto</th><th>P<small>probabilidad</small></th><th>G<small>gravedad</small></th><th>R</th><th>Acción</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th><th>Residual P'×G' <span class="nuevo">nuevo</span></th><th>Regla <span class="nuevo">nuevo</span></th></tr></thead>
+  ${porProc(l,x=>rp(x[0]),13,fila,x=>abierto(x[0].estado))}
   </table></div>
   <div class="card pad mt">${matriz3('Matriz P × G (riesgos abiertos)','G','P',abiertos,'G','P')}</div>`;
 }
@@ -219,7 +311,20 @@ function oport(){
   const l=idx.filter(([o])=>okProc(rp(o))&&(S.estado==='todos'||(S.estado==='abiertos'?abierto(o.estado):o.estado===S.estado)));
   if(S.orden==='R')l.sort((a,b)=>(b[0].VR||0)-(a[0].VR||0));
   const sel=(i,f,cur,opts)=>`<select onchange="setO(${i},'${f}',this.value)">${opts.map(o=>`<option value="${o}" ${String(cur??'')===String(o)?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
+  const selA=(i,j,cur)=>`<select onchange="setAcc('opps',${i},${j},'estado',this.value)">${ESTADOS.map(o=>`<option value="${o}" ${(cur||'')===o?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
   const sinVal=D.opps.filter(o=>!o.V||!o.R).length, sinEst=D.opps.filter(o=>!o.estado).length;
+  const fila=([o,i])=>{
+    const A=accs(o).length?accs(o):[null], n=A.length, rs=n>1?` rowspan="${n}"`:'';
+    return A.map((a,j)=>{
+      const first=j===0, last=j===n-1;
+      const add=last?`<div><button class="ed" onclick="editar('opp','${o.id}',{addAcc:1})">+ acción</button></div>`:'';
+      const l0=first?`<td${rs}><b>${esc(rt(o))}</b> <button class="ed" title="Editar" onclick="editar('opp','${o.id}')">✎</button></td>`:'';
+      const ac=a?`<td>${nl(a.accion)||'<span class="mut">—</span>'}${add}</td>`:`<td><span class="mut">—</span>${add}</td>`;
+      const vr=first?`<td${rs}>${sel(i,'V',o.V,['',1,2,3])}</td><td${rs}>${sel(i,'R',o.R,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(o.VR)}">${o.VR??0}</span></td>`:'';
+      const rest=a?`<td>${esc(a.resp)}</td><td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td><td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
+        :`<td></td><td></td><td>${sel(i,'estado',o.estado,ESTADOS)}</td><td></td>`;
+      return `<tr>${l0}${ac}${vr}${rest}</tr>`}).join('');
+  };
   return `<div class="kpis">
    <div class="card kpi"><b>${D.opps.length}</b><span>oportunidades</span></div>
    <div class="card kpi"><b>${D.opps.filter(o=>o.estado==='En curso').length}</b><span>en curso</span></div>
@@ -228,13 +333,8 @@ function oport(){
    <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>sin valorar (V o R vacíos)</span></div></div>
   <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('opp',null)">+ Añadir oportunidad</button></div>
-  ${plBar}<div class="card scroll"><table class="asp fit"><colgroup><col style="width:18%"><col style="width:23%"><col style="width:7%"><col style="width:7%"><col style="width:5%"><col style="width:9%"><col style="width:6%"><col style="width:7%"><col style="width:18%"></colgroup><thead><tr><th>Factor de oportunidad</th><th>Acciones</th><th>Viabilidad</th><th>Rentabilidad</th><th>V*R</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th></tr></thead>
-  ${porProc(l,x=>rp(x[0]),9,([o,i])=>`<tr><td><b>${esc(rt(o))}</b> <button class="ed" title="Editar" onclick="editar('opp','${o.id}')">✎</button></td><td>${nl(o.accion)||'<span class="mut">—</span>'}</td>
-   <td>${sel(i,'V',o.V,['',1,2,3])}</td><td>${sel(i,'R',o.R,['',1,2,3])}</td><td><span class="pill ${lvl(o.VR)}">${o.VR??0}</span></td>
-   <td>${esc(o.resp)}</td>
-   <td style="color:${vencido(o)?'var(--bad)':''}">${esc(fecha(o.plazo))}${vencido(o)?'<div style="font-size:11px">vencida</div>':''}</td>
-   <td>${sel(i,'estado',o.estado,ESTADOS)}</td>
-   <td style="color:var(--muted)">${nl(o.coment)}</td></tr>`,x=>abierto(x[0].estado))}
+  ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[17,22,6.5,7.5,5,9,6,7,20].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de oportunidad</th><th>Acciones</th><th>V<small>viabilidad</small></th><th>R<small>rentabilidad</small></th><th>V*R</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th></tr></thead>
+  ${porProc(l,x=>rp(x[0]),9,fila,x=>abierto(x[0].estado))}
   </table></div>
   <div class="card pad mt">${matriz3('Matriz V × R (oportunidades abiertas valoradas)','R','V',D.opps.filter(o=>abierto(o.estado)&&o.V&&o.R),'R','V')}</div>`;
 }
@@ -288,7 +388,7 @@ const revI=k=>REV.imgs.filter(im=>im.anio===REV.anio&&im.key===k);
 function revSecs(){
   const cnt=t=>D.factors.filter(f=>f.tipo===t).length;
   const ab=D.risks.filter(r=>abierto(r.estado)), cer=D.risks.filter(r=>r.estado==='Cerrada');
-  const oab=D.opps.filter(o=>abierto(o.estado)&&o.accion), ocer=D.opps.filter(o=>o.estado==='Cerrada');
+  const oab=D.opps.filter(o=>abierto(o.estado)&&tieneAcc(o)), ocer=D.opps.filter(o=>o.estado==='Cerrada');
   const O=objsAno(REV.anio).filter(o=>o.objetivo);
   const porProc=Object.entries(D.factors.reduce((a,f)=>(a[proc(f.proceso)]=(a[proc(f.proceso)]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`${p} (${n})`).join(', ');
   const P=(s)=>({t:'p',s}), L=(s)=>({t:'li',s}), T=(head,rows)=>({t:'table',head,rows});
@@ -299,13 +399,16 @@ function revSecs(){
    man('cl','Cumplimiento legal','Candidato a módulo propio (evaluación de cumplimiento legal).',1),
    aut('obj','Cumplimiento de los objetivos',[P(`${O.length} objetivos definidos para ${REV.anio}. Resultado por trimestre:`),T(['Objetivo','Indicador','T1','T2','T3','T4'],O.map(o=>[o.objetivo,o.indicador||'',...o.t.map(x=>x||'')]))]),
    man('aud','Auditorías'),man('for','Formación'),man('com','Comunicación, participación y consulta'),man('prov','Desempeño de los proveedores externos'),
-   aut('acc','Estado de las acciones de revisiones por la dirección previas',[P(`${ab.length} riesgos abiertos${ab.filter(vencido).length?` (${ab.filter(vencido).length} con plazo vencido)`:''} y ${oab.length} oportunidades con acción abierta:`),...ab.filter(r=>r.accion).map(r=>L(`${rt(r)} — ${r.resp||'sin responsable'} · ${fecha(r.plazo)||'sin plazo'} · ${r.estado||'sin estado'}`))]),
+   aut('acc','Estado de las acciones de revisiones por la dirección previas',(()=>{
+     const f=[];for(const r of ab)accs(r).filter(a=>a.accion).forEach(a=>f.push([`Riesgo: ${rt(r)}`,a]));for(const o of oab)accs(o).filter(a=>a.accion).forEach(a=>f.push([`Oportunidad: ${rt(o)}`,a]));
+     const v=f.filter(([,a])=>vencidoA(a)).length;
+     return [P(`${ab.length} riesgos abiertos y ${oab.length} oportunidades con acción abierta (${f.length} acciones${v?`, ${v} con plazo vencido`:''}):`),...f.map(([t,a])=>L(`${t} — ${a.accion.split('\n')[0]} · ${a.resp||'sin responsable'} · ${fecha(a.plazo)||'sin plazo'} · ${a.estado||'sin estado'}`))]})()),
    man('rec','Adecuación de los recursos'),man('camb','Cambios que pueden afectar al Sistema'),
    aut('ctx','Cuestiones internas y externas',[P(`DAFO del ${fecha(D.meta.fecha)}: ${cnt('D')} debilidades, ${cnt('A')} amenazas, ${cnt('F')} fortalezas y ${cnt('O')} oportunidades.`),P(`Por proceso: ${porProc}.`)]),
    aut('par','Necesidades y expectativas de las partes interesadas',[P(`${D.parties.length} grupos de interés (${D.parties.filter(p=>p.tipo==='externa').length} externos, ${D.parties.filter(p=>p.tipo==='interna').length} internos):`),T(['Grupo de interés','Necesidades','Expectativas'],D.parties.map(p=>[p.nombre,p.necesidades||'',p.expectativas||'']))]),
    aut('ryo','Riesgos y oportunidades',[P(`Riesgos: ${D.risks.length} (${ab.length} abiertos, ${cer.length} cerrados). Abiertos con R alto (6–9): ${ab.filter(r=>r.R>=6).length}.`),P(`Oportunidades: ${D.opps.length} (${D.opps.filter(o=>o.V).length} valoradas, ${ocer.length} cerradas).`)]),
    man('asp','Aspectos ambientales significativos','Viene de la evaluación de aspectos ambientales (fuera de este módulo).'),
-   aut('efi','Eficacia de las acciones para abordar riesgos y oportunidades',[P(`${cer.length} riesgos cerrados; ${cer.filter(r=>r.Rr!=null).length} con riesgo residual valorado.`),T(['Riesgo','R inicial','R residual','Comentario'],cer.map(r=>[rt(r),String(r.R),r.Rr!=null?String(r.Rr):'sin valorar',(r.coment||'').slice(0,160)]))]),
+   aut('efi','Eficacia de las acciones para abordar riesgos y oportunidades',[P(`${cer.length} riesgos cerrados; ${cer.filter(r=>r.Rr!=null).length} con riesgo residual valorado.`),T(['Riesgo','R inicial','R residual','Comentario'],cer.map(r=>[rt(r),String(r.R),r.Rr!=null?String(r.Rr):'sin valorar',accs(r).map(a=>a.coment).filter(Boolean).join(' / ').slice(0,160)]))]),
    man('con','Conclusiones'),man('conv','Conveniencia, adecuación y eficacia continuas del sistema'),man('mej','Oportunidades de mejora / necesidad de cambios')];
 }
 const revVacia=s=>!revT(s.k).trim()&&!revI(s.k).length;
@@ -381,21 +484,24 @@ async function buildDocx(){
   const logoBytes=new Uint8Array(await (await fetch('winoa-docx-logo.jpg')).arrayBuffer());
   body+=wp(wr(`Documento generado desde SGI el ${new Date().toLocaleDateString('es-ES')}.`,{i:true,c:'808080',sz:18}),{before:400,jc:'left'});
   const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${body}<w:sectPr><w:headerReference w:type="default" r:id="rIdH"/><w:footerReference w:type="default" r:id="rIdF"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1701" w:bottom="1418" w:left="1701" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const HF='<w:rFonts w:ascii="Roboto Light" w:hAnsi="Roboto Light" w:cs="Arial"/>';
+  const hr=t=>`<w:r><w:rPr>${HF}<w:sz w:val="28"/><w:szCs w:val="28"/><w:lang w:val="es-ES"/></w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`;
+  const hpar=inner=>`<w:p><w:pPr><w:pStyle w:val="Encabezado"/><w:spacing w:before="0" w:after="0"/><w:jc w:val="center"/></w:pPr>${inner}</w:p>`;
   const hc=(w,inner,span)=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${span?`<w:gridSpan w:val="${span}"/>`:''}<w:vAlign w:val="center"/></w:tcPr>${inner}</w:tc>`;
-  const hp=(t,o={})=>wp(wr(t,{b:o.b,sz:o.sz||20}),{before:40,after:40,jc:'center'});
-  const logo=wp(`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="1524000" cy="609600"/><wp:docPr id="1" name="Winoa"/><wp:cNvGraphicFramePr/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="Winoa"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdL"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="1524000" cy="609600"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`,{jc:'center',before:0});
+  // El logo del original es una imagen 160×160 recortada (srcRect) a la banda central: 4,2 × 1,7 cm
+  const logo=hpar(`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="1524000" cy="609600"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="1" name="Logo Winoa"><a:hlinkClick r:id="rIdLink"/></wp:docPr><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="1" name="Logo Winoa"/><pic:cNvPicPr><a:picLocks noChangeAspect="1"/></pic:cNvPicPr></pic:nvPicPr><pic:blipFill rotWithShape="1"><a:blip r:embed="rIdL"/><a:srcRect t="30625" b="29375"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr bwMode="auto"><a:xfrm><a:off x="0" y="0"/><a:ext cx="1524000" cy="609600"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:noFill/><a:ln><a:noFill/></a:ln></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`);
   const bd=['top','left','bottom','right','insideH','insideV'].map(s=>`<w:${s} w:val="single" w:sz="4" w:space="0" w:color="auto"/>`).join('');
-  const header=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr ${NS}><w:tbl><w:tblPr><w:tblW w:w="8504" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid><w:gridCol w:w="2838"/><w:gridCol w:w="3258"/><w:gridCol w:w="2408"/></w:tblGrid>
-   <w:tr><w:trPr><w:trHeight w:val="1000"/></w:trPr>${hc(2838,hp('WINOA IBÉRICA, S.A.'))}${hc(3258,hp('Sistema de Gestión Integrado'))}${hc(2408,logo)}</w:tr>
-   <w:tr>${hc(8504,hp(tit,{b:true,sz:22}),3)}</w:tr></w:tbl>${wp('',{before:0})}</w:hdr>`;
+  const header=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr ${NS}><w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="-5" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblCellMar><w:top w:w="57" w:type="dxa"/><w:left w:w="70" w:type="dxa"/><w:bottom w:w="57" w:type="dxa"/><w:right w:w="70" w:type="dxa"/></w:tblCellMar><w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="0" w:noVBand="0"/></w:tblPr><w:tblGrid><w:gridCol w:w="2776"/><w:gridCol w:w="3183"/><w:gridCol w:w="2540"/></w:tblGrid>
+   <w:tr><w:trPr><w:trHeight w:val="440"/></w:trPr>${hc(2838,hpar(hr('WINOA IBÉRICA, S.A.')))}${hc(3258,hpar(hr('Sistema de Gestión Integrado')))}${hc(2398,logo)}</w:tr>
+   <w:tr><w:trPr><w:trHeight w:val="440"/></w:trPr>${hc(8494,hpar(hr(tit)),3)}</w:tr></w:tbl><w:p><w:pPr><w:pStyle w:val="Encabezado"/></w:pPr></w:p></w:hdr>`;
   const fld=(c)=>`<w:r><w:rPr>${FONT}<w:sz w:val="18"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr>${FONT}<w:sz w:val="18"/></w:rPr><w:instrText xml:space="preserve"> ${c} </w:instrText></w:r><w:r><w:rPr>${FONT}<w:sz w:val="18"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr>${FONT}<w:sz w:val="18"/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr>${FONT}<w:sz w:val="18"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r>`;
   const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${NS}><w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="8504"/></w:tabs></w:pPr>${wr('Página ',{sz:18})}${fld('PAGE')}${wr('/',{sz:18})}${fld('NUMPAGES')}<w:r><w:tab/></w:r>${wr(new Date().toLocaleDateString('es-ES'),{sz:18})}</w:p></w:ftr>`;
-  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr>${FONT}<w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="es-ES"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:outlineLvl w:val="0"/></w:pPr></w:style></w:styles>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr>${FONT}<w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="es-ES"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style><w:style w:type="paragraph" w:styleId="Encabezado"><w:name w:val="header"/><w:basedOn w:val="Normal"/><w:pPr><w:tabs><w:tab w:val="center" w:pos="4252"/><w:tab w:val="right" w:pos="8504"/></w:tabs></w:pPr></w:style><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:outlineLvl w:val="0"/></w:pPr></w:style></w:styles>`;
   const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
   const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships';
   const rootRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="word/document.xml"/></Relationships>`;
   const docRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdS" Type="${R}/styles" Target="styles.xml"/><Relationship Id="rIdH" Type="${R}/header" Target="header1.xml"/><Relationship Id="rIdF" Type="${R}/footer" Target="footer1.xml"/>${rels.join('')}</Relationships>`;
-  const hdrRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdL" Type="${R}/image" Target="media/logo.jpg"/></Relationships>`;
+  const hdrRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdL" Type="${R}/image" Target="media/logo.jpg"/><Relationship Id="rIdLink" Type="${R}/hyperlink" Target="https://www.winoagroup.com/" TargetMode="External"/></Relationships>`;
   return zipStore([{name:'[Content_Types].xml',data:ct},{name:'_rels/.rels',data:rootRels},{name:'word/document.xml',data:doc},{name:'word/_rels/document.xml.rels',data:docRels},{name:'word/styles.xml',data:styles},{name:'word/header1.xml',data:header},{name:'word/_rels/header1.xml.rels',data:hdrRels},{name:'word/footer1.xml',data:footer},{name:'word/media/logo.jpg',data:logoBytes},...media]);
 }
 async function generarWord(){
@@ -443,11 +549,11 @@ function revision(){
 
 function coherencia(){
   const sinEv=D.factors.filter(f=>!evaluado(f));
-  const g3=D.risks.filter(r=>r.G===3&&r.R<4&&!r.accion&&!r.just);
-  const sinAcc=D.risks.filter(r=>requiere(r)&&!r.accion&&!r.just);
+  const g3=D.risks.filter(r=>r.G===3&&r.R<4&&!tieneAcc(r)&&!r.just);
+  const sinAcc=D.risks.filter(r=>requiere(r)&&!tieneAcc(r)&&!r.just);
   const sinEst=D.risks.filter(r=>!r.estado);
   const cerSin=D.risks.filter(r=>r.estado==='Cerrada'&&r.Rr==null);
-  const venc=D.risks.concat(D.opps).filter(vencido);
+  const venc=[];D.risks.concat(D.opps).forEach(x=>accs(x).filter(vencidoA).forEach(a=>venc.push([x,a])));
   const dup=[...new Set(D.factors.map(f=>f.texto))].filter(t=>D.factors.filter(f=>f.texto===t).length>1);
   const objPend=D.objs.filter(o=>!o.objetivo);
   const bloque=(t,items,expl)=>`<div class="card pad mt"><h2>${t} <span class="pill ${items.length?'y':'g'}">${items.length}</span></h2><p class="mut" style="margin-top:0">${expl}</p>${items.length?`<ul class="plain">${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:''}</div>`;
@@ -458,7 +564,7 @@ function coherencia(){
   ${bloque('Riesgos que exigen acción y no la tienen',sinAcc.map(r=>`${esc(rt(r))}: P${r.P} × G${r.G} = ${r.R}`),'R ≥ 4, o G = 3: hace falta una acción o una justificación escrita.')}
   ${bloque('Riesgos sin estado',sinEst.map(r=>esc(rt(r))),'No se sabe si están abiertos o cerrados.')}
   ${bloque('Riesgos cerrados sin riesgo residual valorado',cerSin.map(r=>esc(rt(r))),'Cerrar exige valorar P y G residuales para demostrar la eficacia de la acción.')}
-  ${bloque('Acciones con plazo vencido',venc.map(x=>`${esc(rt(x))} — ${esc(x.resp||'sin responsable')} · ${esc(fecha(x.plazo))}`),'Siguen abiertas y su plazo ya pasó.')}
+  ${bloque('Acciones con plazo vencido',venc.map(([x,a])=>`${esc(rt(x))} — ${esc((a.accion||'').split('\n')[0])} · ${esc(a.resp||'sin responsable')} · ${esc(fecha(a.plazo))}`),'Siguen abiertas y su plazo ya pasó.')}
   ${bloque('Objetivos por completar',objPend.map(o=>`${esc(o.anio)} · ${esc(o.origen)}`),'Líneas con origen y plazo pero sin objetivo definido.')}
   ${bloque('Factores repetidos en dos cuadrantes',dup.map(esc),'Pueden ser legítimos (amenaza y oportunidad a la vez), pero conviene que sea consciente.')}`;
 }
@@ -477,77 +583,138 @@ const nid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const NIV=[['','—'],[1,'1 · Baja'],[2,'2 · Media'],[3,'3 · Alta']];
 const SEL_EST=[['','— (pendiente)'],['En curso','En curso'],['Cerrada','Cerrada']];
 const KIND={
-  factor:{col:'factors',list:()=>D.factors,titulo:'Factor del DAFO',pref:'F',nuevo:()=>({tipo:'D',texto:'',cat:'',proceso:''}),
-    campos:[['tipo','Tipo','sel',[['D','Debilidad (interna, negativa)'],['A','Amenaza (externa, negativa)'],['F','Fortaleza (interna, positiva)'],['O','Oportunidad (externa, positiva)']]],['texto','Factor','area'],['cat','Categoría (aspecto)','text','dl_cat'],['proceso','Proceso afectado','proc']],
+  factor:{col:'factors',list:()=>D.factors,titulo:'Factor del DAFO',pref:'F',noDel:true,nuevo:()=>({tipo:'D',texto:'',cat:'',proceso:''}),
+    campos:[['texto','Factor','area'],['proceso','Proceso afectado','proc']],
     req:o=>o.texto.trim()?'':'El factor no puede estar vacío'},
   party:{col:'parties',list:()=>D.parties,titulo:'Grupo de interés',pref:'P',nuevo:()=>({tipo:'externa',nombre:'',necesidades:'',expectativas:'',requisitos:''}),
     campos:[['tipo','Tipo','sel',[['externa','Externo'],['interna','Interno']]],['nombre','Grupo de interés','text'],['necesidades','Necesidades','area'],['expectativas','Expectativas','area'],['requisitos','Requisitos para el Sistema','area']],
     req:o=>o.nombre.trim()?'':'Falta el nombre del grupo'},
-  risk:{col:'risks',list:()=>D.risks,titulo:'Riesgo',pref:'R',nuevo:()=>({fid:'',causa:'',efecto:'',P:1,G:1,R:1,accion:'',resp:'',plazo:'',estado:'',coment:'',just:'',Pr:null,Gr:null,Rr:null}),
-    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','Probabilidad (P)','sel',NIV.slice(1)],['G','Gravedad (G)','sel',NIV.slice(1)],['accion','Acción','area'],['resp','Responsable','text'],['plazo','Plazo','month'],['estado','Estado','sel',SEL_EST],['coment','Comentarios','area'],['just','Justificación (G=3 o R≥4 sin acción)','area'],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV]],
+  risk:{col:'risks',list:()=>D.risks,titulo:'Riesgo',pref:'R',acc:true,nuevo:()=>({fid:'',causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null}),
+    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','P · Probabilidad','sel',NIV.slice(1)],['G','G · Gravedad','sel',NIV.slice(1)],['just','Justificación (G=3 o R≥4 sin acción)','area'],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
     req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
-    post:o=>{o.R=o.P*o.G;o.Rr=o.Pr&&o.Gr?o.Pr*o.Gr:null}},
-  opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',nuevo:()=>({fid:'',accion:'',V:null,R:null,VR:0,resp:'',plazo:'',estado:'',coment:''}),
-    campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['accion','Acciones','area'],['V','Viabilidad','sel',NIV],['R','Rentabilidad','sel',NIV],['resp','Responsable','text'],['plazo','Plazo','month'],['estado','Estado','sel',SEL_EST],['coment','Comentarios','area']],
+    post:o=>{o.R=o.P*o.G;o.Rr=o.Pr&&o.Gr?o.Pr*o.Gr:null;recalc(o)}},
+  opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',acc:true,nuevo:()=>({fid:'',V:null,R:null,VR:0,acciones:[],estado:''}),
+    campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
     req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
-    post:o=>{o.VR=(o.V||0)*(o.R||0)}},
+    post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
   obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:S.ano||String(new Date().getFullYear()),origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
     campos:[['anio','Año','text'],['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
       ['t0','Resultado T1','text'],['t1','Resultado T2','text'],['t2','Resultado T3','text'],['t3','Resultado T4','text'],['res0','Observación T1','area'],['res1','Observación T2','area'],['res2','Observación T3','area'],['res3','Observación T4','area'],['seg','Conclusión del seguimiento','area']],
     req:o=>/^\d{4}$/.test(o.anio)?'':'El año debe tener 4 cifras'},
   meta:{col:'meta',list:()=>[D.meta],titulo:'Datos generales',pref:'M',nuevo:()=>({}),
-    campos:[['fecha','Fecha de elaboración','date'],['participantes','Participantes (uno por línea)','lines']],req:()=>''}
+    campos:[['fecha','Fecha de elaboración','date'],['participantes','Participantes (uno por línea)','lines']],req:()=>''},
+  // --- locales: trabajan sobre el borrador de factores (Externo / Interno), no tocan el servidor
+  fdraft:{local:true,titulo:'Factor',noDel:true,
+    campos:[['texto','Factor','area'],['proceso','Proceso afectado','proc'],['c0','','chk'],['c1','','chk']],
+    apply:(o,m)=>{
+      if(!o.texto.trim())return 'El factor no puede estar vacío';
+      if(!o.c0&&!o.c1)return 'Elige al menos una opción';
+      fdStart();const T=TABT[m.pre.tab];
+      if(!m.id){
+        [o.c0&&T[0],o.c1&&T[1]].filter(Boolean).forEach(t=>FD.push({id:nid('F'),tipo:t,texto:o.texto.trim(),cat:m.pre.cat,proceso:o.proceso||''}));
+        FE[m.pre.tab]=FE[m.pre.tab].filter(c=>c!==m.pre.cat);
+      }else{
+        const g=fdGrupo(m.id);
+        g.forEach(f=>{f.texto=o.texto.trim();f.proceso=o.proceso||''});
+        [0,1].forEach(k=>{const want=!!o['c'+k],has=g.some(x=>x.tipo===T[k]);
+          if(want&&!has)FD.push({id:nid('F'),tipo:T[k],texto:o.texto.trim(),cat:g[0].cat,proceso:o.proceso||''});
+          if(!want&&has)FD=FD.filter(x=>!(g.includes(x)&&x.tipo===T[k]))});
+      }
+      return '';}},
+  aspecto:{local:true,titulo:'Aspecto',noDel:true,campos:[['nombre','Nombre del aspecto','text']],
+    apply:(o,m)=>{
+      const n=o.nombre.trim();if(!n)return 'El aspecto necesita un nombre';
+      const T=TABT[m.pre.tab];fdStart();
+      const existe=new Set([...FD.filter(f=>T.includes(f.tipo)).map(f=>f.cat),...FE[m.pre.tab]]);
+      if(m.id){ // renombrar
+        if(n!==m.pre.orig&&existe.has(n))return 'Ya existe un aspecto con ese nombre';
+        FD.forEach(f=>{if(f.cat===m.pre.orig&&T.includes(f.tipo))f.cat=n});
+        FE[m.pre.tab]=FE[m.pre.tab].map(c=>c===m.pre.orig?n:c);
+      }else{
+        if(existe.has(n))return 'Ya existe un aspecto con ese nombre';
+        FE[m.pre.tab].push(n);
+      }
+      return '';}}
 };
 let M=null;
 const getV=(o,n)=>{const m=/^(t|res)(\d)$/.exec(n);return m?(o[m[1]]||[])[+m[2]]??'':o[n]};
 const setV=(o,n,v)=>{const m=/^(t|res)(\d)$/.exec(n);if(m){o[m[1]]=o[m[1]]||['','','',''];o[m[1]][+m[2]]=v}else o[n]=v};
+function autoGrow(){document.querySelectorAll('#modal textarea').forEach(t=>{const f=()=>{t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'};t.style.overflow='hidden';t.style.resize='none';f();t.addEventListener('input',f)})}
 function editar(kind,id,pre){
-  const K=KIND[kind];
-  const base=id?K.list().find(x=>x.id===id):Object.assign(K.nuevo(),pre||{});
+  const K=KIND[kind];pre=pre||{};
+  let base;
+  if(K.local)base=Object.assign({},pre);
+  else base=id?K.list().find(x=>x.id===id):Object.assign(K.nuevo(),pre);
   if(!base)return;
-  M={kind,id,obj:JSON.parse(JSON.stringify(base))};
-  const o=M.obj;
+  M={kind,id,pre,obj:JSON.parse(JSON.stringify(base)),old:base.texto};
+  if(K.acc){if(!Array.isArray(M.obj.acciones))M.obj.acciones=[];if(pre.addAcc||(!id&&!M.obj.acciones.length))M.obj.acciones.push(ACC0())}
+  pintarModal();
+}
+function pintarModal(){
+  const K=KIND[M.kind],o=M.obj,tab=M.pre.tab;
+  const chkL=[tab==='externo'?'Es una amenaza':'Es una debilidad',tab==='externo'?'Es una oportunidad':'Es una fortaleza'];
   const fld=([n,l,t,x])=>{
     const v=getV(o,n),id_='f_'+n;let ctl='';
+    if(n==='estado'&&K.acc&&(o.acciones||[]).length)return '';
     if(t==='text')ctl=`<input id="${id_}" value="${esc(v)}" ${x?`list="${x}"`:''}>`;
     else if(t==='month')ctl=`<input id="${id_}" type="month" value="${esc(v)}">`;
     else if(t==='date')ctl=`<input id="${id_}" type="date" value="${esc(v)}">`;
-    else if(t==='area')ctl=`<textarea id="${id_}" rows="3">${esc(v)}</textarea>`;
-    else if(t==='lines')ctl=`<textarea id="${id_}" rows="6">${esc((v||[]).join('\n'))}</textarea>`;
+    else if(t==='area')ctl=`<textarea id="${id_}" rows="2">${esc(v)}</textarea>`;
+    else if(t==='lines')ctl=`<textarea id="${id_}" rows="3">${esc((v||[]).join('\n'))}</textarea>`;
     else if(t==='proc')ctl=`<select id="${id_}"><option value="">— sin proceso</option>${Object.entries(PROCS).map(([c,n2])=>`<option value="${c}" ${codeOf(v)===c?'selected':''}>${esc(n2)}</option>`).join('')}</select>`;
     else if(t==='sel')ctl=`<select id="${id_}">${x.map(([val,txt])=>`<option value="${val}" ${String(v??'')===String(val)?'selected':''}>${esc(txt)}</option>`).join('')}</select>`;
     else if(t==='fac')ctl=`<select id="${id_}"><option value="">— elige un factor</option>${D.factors.filter(f=>x.includes(f.tipo)).map(f=>`<option value="${f.id}" ${v===f.id?'selected':''}>${esc(f.texto.slice(0,110))}</option>`).join('')}</select>`;
+    else if(t==='chk')return `<label class="fl chk"><input id="${id_}" type="checkbox" ${v?'checked':''}> <span>${chkL[+n.slice(1)]}</span></label>`;
     return `<label class="fl"><span>${l}</span>${ctl}</label>`};
-  document.getElementById('modal').innerHTML=`<div class="mbg" onclick="if(event.target===this)cerrar()"><div class="mbox" role="dialog">
-    <h2>${id?'Editar':'Nuevo'} · ${K.titulo}</h2>
-    <datalist id="dl_cat">${[...new Set(D.factors.map(f=>f.cat).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+  const accHtml=()=>!K.acc?'':`<h3 class="acch">Acciones <span class="mut" style="font-weight:400">(puedes añadir todas las que necesites)</span></h3>
+    ${(o.acciones||[]).map((a,j)=>`<div class="accbox"><div class="acchead"><b>Acción ${j+1}</b><button class="ed" onclick="accQuitar(${j})">Quitar</button></div><div class="mform">
+      <label class="fl full"><span>Acción</span><textarea data-a="${j}" data-k="accion" rows="2">${esc(a.accion)}</textarea></label>
+      <label class="fl"><span>Responsable</span><input data-a="${j}" data-k="resp" value="${esc(a.resp)}"></label>
+      <label class="fl"><span>Plazo</span><input type="month" data-a="${j}" data-k="plazo" value="${esc(a.plazo)}"></label>
+      <label class="fl"><span>Estado</span><select data-a="${j}" data-k="estado">${SEL_EST.map(([v,t])=>`<option value="${v}" ${(a.estado||'')===v?'selected':''}>${t}</option>`).join('')}</select></label>
+      <label class="fl full"><span>Comentarios</span><textarea data-a="${j}" data-k="coment" rows="2">${esc(a.coment)}</textarea></label></div></div>`).join('')}
+    <button class="btn" onclick="accAnadir()">+ Añadir acción</button>`;
+  document.getElementById('modal').innerHTML=`<div class="mbg" onclick="if(event.target===this)cerrar()"><div class="mbox ${K.acc?'wide':''}" role="dialog">
+    <h2>${M.id?'Editar':'Nuevo'} · ${K.titulo}</h2>
     <datalist id="dl_ori">${[...new Set(D.objs.map(f=>f.origen).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+    ${M.kind==='fdraft'?`<p class="mut" style="margin:0 0 8px">Aspecto: <b>${esc(M.pre.cat)}</b></p>`:''}
     <div class="mform">${K.campos.map(fld).join('')}</div>
+    ${accHtml()}
     <div class="merr" id="merr"></div>
-    <div class="mbtn">${id&&kind!=='meta'?'<button class="btn danger" onclick="borrar()">Eliminar</button>':''}<span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="aceptar()">Guardar</button></div>
+    <div class="mbtn">${M.id&&!K.noDel&&M.kind!=='meta'?'<button class="btn danger" onclick="borrar()">Eliminar</button>':''}<span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="aceptar()">${K.local?'Aceptar':'Guardar'}</button></div>
   </div></div>`;
+  autoGrow();
 }
+function recoger(){
+  const K=KIND[M.kind],o=M.obj;
+  for(const [n,,t] of K.campos){const el=document.getElementById('f_'+n);if(!el)continue;let v;
+    if(t==='chk')v=el.checked;
+    else{v=el.value;
+      if(t==='lines')v=v.split('\n').map(x=>x.trim()).filter(Boolean);
+      else if(['P','G','Pr','Gr','V','R'].includes(n))v=v===''?null:+v}
+    setV(o,n,v)}
+  if(K.acc){const A=[];document.querySelectorAll('#modal [data-a]').forEach(el=>{const j=+el.dataset.a;A[j]=A[j]||ACC0();A[j][el.dataset.k]=el.value});o.acciones=A.filter(Boolean)}
+}
+function accAnadir(){recoger();M.obj.acciones.push(ACC0());pintarModal();const b=document.querySelectorAll('#modal .accbox');if(b.length)b[b.length-1].scrollIntoView({block:'nearest'})}
+function accQuitar(j){recoger();M.obj.acciones.splice(j,1);pintarModal()}
 function cerrar(){document.getElementById('modal').innerHTML='';M=null}
 async function aceptar(){
-  if(!M)return;const K=KIND[M.kind],o=M.obj;
-  for(const [n,,t] of K.campos){const el=document.getElementById('f_'+n);if(!el)continue;let v=el.value;
-    if(t==='lines')v=v.split('\n').map(x=>x.trim()).filter(Boolean);
-    else if(['P','G','Pr','Gr','V','R'].includes(n))v=v===''?null:+v;
-    else if(t==='proc')v=v;
-    setV(o,n,v)}
+  if(!M)return;recoger();const K=KIND[M.kind],o=M.obj;
+  if(K.local){const err=K.apply(o,M);if(err){document.getElementById('merr').textContent=err;return}cerrar();render();return}
+  if(K.acc)o.acciones=o.acciones.filter(a=>a.accion||a.resp||a.plazo||a.coment||a.estado);
   const err=K.req(o);if(err){document.getElementById('merr').textContent=err;return}
   if(K.post)K.post(o);
   if(!M.id)o.id=nid(K.pref);
-  try{await api('PUT',`api/${K.col}/${encodeURIComponent(o.id)}`,o)}catch(e){document.getElementById('merr').textContent='NO SE HA GUARDADO: '+e.message;return}
+  const sib=[];
+  if(M.kind==='factor'&&o.texto!==M.old)D.factors.forEach(f=>{if(f.id!==o.id&&f.cat===o.cat&&f.texto===M.old&&(f.tipo==='A'||f.tipo==='O')===(o.tipo==='A'||o.tipo==='O')){sib.push({...f,texto:o.texto})}});
+  try{await api('PUT',`api/${K.col}/${encodeURIComponent(o.id)}`,o);for(const f of sib)await api('PUT',`api/factors/${encodeURIComponent(f.id)}`,f)}catch(e){document.getElementById('merr').textContent='NO SE HA GUARDADO: '+e.message;return}
   if(M.kind==='meta')Object.assign(D.meta,o);
-  else{const L=K.list();const i=L.findIndex(x=>x.id===o.id);if(i>=0)L[i]=o;else L.push(o)}
+  else{const L=K.list();const i=L.findIndex(x=>x.id===o.id);if(i>=0)L[i]=o;else L.push(o);sib.forEach(f=>{const k=D.factors.findIndex(x=>x.id===f.id);if(k>=0)D.factors[k]=f})}
   if(M.kind==='obj')S.ano=o.anio;
   reindex();cerrar();toast('Guardado');render();
 }
 async function borrar(){
   if(!M||!M.id)return;const K=KIND[M.kind],o=M.obj;
-  if(M.kind==='factor'){const n=D.risks.filter(r=>r.fid===o.id).length+D.opps.filter(x=>x.fid===o.id).length;
-    if(n){document.getElementById('merr').textContent=`Este factor tiene ${n} riesgo(s)/oportunidad(es) enlazados. Elimínalos primero.`;return}}
   if(!confirm('¿Eliminar definitivamente este elemento?'))return;
   try{await api('DELETE',`api/${K.col}/${encodeURIComponent(o.id)}`)}catch(e){document.getElementById('merr').textContent='No se pudo eliminar: '+e.message;return}
   const L=K.list();const i=L.findIndex(x=>x.id===o.id);if(i>=0)L.splice(i,1);
@@ -560,7 +727,7 @@ async function boot(){
   try{
     const d=await api('GET','api/data');
     D.meta=d.meta[0]||{id:'main',fecha:'',participantes:[]};
-    D.factors=d.factors;D.parties=d.parties;D.risks=d.risks;D.opps=d.opps;
+    D.factors=d.factors;D.parties=d.parties;D.risks=d.risks.map(normAcc);D.opps=d.opps.map(normAcc);D.risks.forEach(recalc);D.opps.forEach(recalc);
     D.objs=d.objetivos.map(o=>({t:['','','',''],res:['','','',''],...o}));
     REV.texto=Object.fromEntries(d.rev_texto.map(r=>[r.id,r.texto]));REV.imgs=d.imgs;
     const y=(D.meta.fecha||'').slice(0,4);

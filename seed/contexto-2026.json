@@ -735,15 +735,20 @@
    "P": 2,
    "G": 3,
    "R": 6,
-   "accion": "Disponer de un presupuesto de hornos alternativo\nCambio del sistema de reactancias por parte de ABP",
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Tras varias semanas en funcionamiento y solucionados los problemas iniciales, el nuevo diseño de reactancias es válido y doy por terminada la acción.",
    "id": "R01",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Disponer de un presupuesto de hornos alternativo\nCambio del sistema de reactancias por parte de ABP",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Tras varias semanas en funcionamiento y solucionados los problemas iniciales, el nuevo diseño de reactancias es válido y doy por terminada la acción."
+    }
+   ]
   },
   {
    "fid": "D6",
@@ -752,15 +757,20 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "Implantación de una Evaluación de desempeño anual  (Comunicación con la persona supervisora, necesidades formativas...)",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Es necesario definir los criterios adecuados de evaluación y el objetivo de la misma",
    "id": "R02",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Implantación de una Evaluación de desempeño anual  (Comunicación con la persona supervisora, necesidades formativas...)",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Es necesario definir los criterios adecuados de evaluación y el objetivo de la misma"
+    }
+   ]
   },
   {
    "fid": "D10",
@@ -769,15 +779,20 @@
    "P": 3,
    "G": 2,
    "R": 6,
-   "accion": "Intentar llegar a un acuerdo lo antes posible",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "",
    "id": "R03",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Intentar llegar a un acuerdo lo antes posible",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "D11",
@@ -786,15 +801,20 @@
    "P": 3,
    "G": 1,
    "R": 3,
-   "accion": "Pedir a centros de formación profesional curriculums femeninos",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Seguimiento de este punto desde la Comisión de Igualdad",
    "id": "R04",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Pedir a centros de formación profesional curriculums femeninos",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Seguimiento de este punto desde la Comisión de Igualdad"
+    }
+   ]
   },
   {
    "fid": "D13",
@@ -803,15 +823,20 @@
    "P": 1,
    "G": 3,
    "R": 3,
-   "accion": "Dar respuesta al recurso. Informar a los grupos de interés",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "A la espera de la sentencia del recurso, presentado en Ene-24",
    "id": "R05",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Dar respuesta al recurso. Informar a los grupos de interés",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "A la espera de la sentencia del recurso, presentado en Ene-24"
+    }
+   ]
   },
   {
    "fid": "A1",
@@ -820,15 +845,12 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R06",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A2",
@@ -837,15 +859,20 @@
    "P": 1,
    "G": 3,
    "R": 3,
-   "accion": "Repercutir al mercado\nPotenciar eficiencia energética\nMejora en los precios de compra",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Se repercute al mercado a traves del EC\nActualizada la auditoría energética a 31Dic24\nAnalizando opciones con el contrato actual - cambio de contrato desde 01-01-26",
    "id": "R07",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Repercutir al mercado\nPotenciar eficiencia energética\nMejora en los precios de compra",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Se repercute al mercado a traves del EC\nActualizada la auditoría energética a 31Dic24\nAnalizando opciones con el contrato actual - cambio de contrato desde 01-01-26"
+    }
+   ]
   },
   {
    "fid": "D3",
@@ -854,15 +881,20 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "Analizar posibilidades en el mercado \"PPA\"",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)",
    "id": "R08",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Analizar posibilidades en el mercado \"PPA\"",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)"
+    }
+   ]
   },
   {
    "fid": "A12",
@@ -871,15 +903,20 @@
    "P": 3,
    "G": 1,
    "R": 3,
-   "accion": "Comprar los derechos a buen precio",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)",
    "id": "R09",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Comprar los derechos a buen precio",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)"
+    }
+   ]
   },
   {
    "fid": "A13",
@@ -888,15 +925,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Comprar los derechos a buen precio",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)",
    "id": "R10",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Comprar los derechos a buen precio",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)"
+    }
+   ]
   },
   {
    "fid": "D1",
@@ -905,15 +947,20 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "Tras la adquisición por parte de SINTO, se ha reorganizado la estructura del grupo y se ha paralizado este proyecto hasta nuevo aviso",
    "id": "R11",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "",
+     "resp": "",
+     "plazo": "",
+     "estado": "",
+     "coment": "Tras la adquisición por parte de SINTO, se ha reorganizado la estructura del grupo y se ha paralizado este proyecto hasta nuevo aviso"
+    }
+   ]
   },
   {
    "fid": "D4",
@@ -922,15 +969,20 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "Contención salarial en la negociación del Convenio Colectivo y adecuación de plantilla a volumen de operaciones",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Convenio colectivo 2025",
    "id": "R12",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Contención salarial en la negociación del Convenio Colectivo y adecuación de plantilla a volumen de operaciones",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Convenio colectivo 2025"
+    }
+   ]
   },
   {
    "fid": "D5",
@@ -939,15 +991,20 @@
    "P": 2,
    "G": 3,
    "R": 6,
-   "accion": "Estudio de plan de viabilidad para utilizar zonas de parking cubiertas para almacén de producto acabado",
-   "resp": "Eneko Ruiz",
-   "plazo": "2025-05",
    "estado": "Cerrada",
-   "coment": "",
    "id": "R13",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Estudio de plan de viabilidad para utilizar zonas de parking cubiertas para almacén de producto acabado",
+     "resp": "Eneko Ruiz",
+     "plazo": "2025-05",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "D7",
@@ -956,15 +1013,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Analizar las causas del absentimos y definir, si procede, las medidas necesarias para reducirlo",
-   "resp": "Alfredo Santos/Mario Diez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "",
    "id": "R14",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Analizar las causas del absentimos y definir, si procede, las medidas necesarias para reducirlo",
+     "resp": "Alfredo Santos/Mario Diez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "D8",
@@ -973,15 +1035,12 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R15",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "D9",
@@ -990,15 +1049,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Analizar todas las oportunidades para ponderar la edad media de la plantilla",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Estudio de cada una de las potenciales salidas/jubilaciones y tomar la mejor decisión en la sustitución/contratación",
    "id": "R16",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Analizar todas las oportunidades para ponderar la edad media de la plantilla",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Estudio de cada una de las potenciales salidas/jubilaciones y tomar la mejor decisión en la sustitución/contratación"
+    }
+   ]
   },
   {
    "fid": "D14",
@@ -1007,15 +1071,12 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R17",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A3",
@@ -1024,15 +1085,12 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R18",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A4",
@@ -1041,15 +1099,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Anticipar los posibles cambios legales en la definición y planificación de las operaciones",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "No se aprecian riesgos significativos",
    "id": "R19",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Anticipar los posibles cambios legales en la definición y planificación de las operaciones",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "No se aprecian riesgos significativos"
+    }
+   ]
   },
   {
    "fid": "A5",
@@ -1058,15 +1121,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Adaptación del marco legal",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "No se aprecian riesgos significativos",
    "id": "R20",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Adaptación del marco legal",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "No se aprecian riesgos significativos"
+    }
+   ]
   },
   {
    "fid": "A6",
@@ -1075,15 +1143,12 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R21",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A7",
@@ -1092,15 +1157,20 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "Se ha requerido a proveedores que traigan el DI en dos vias, una de las cuales siempre se entrega a Laboratorio.",
-   "resp": "Adrian Cabrera",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Ya implantado, no se observan desvíos",
    "id": "R22",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Se ha requerido a proveedores que traigan el DI en dos vias, una de las cuales siempre se entrega a Laboratorio.",
+     "resp": "Adrian Cabrera",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Ya implantado, no se observan desvíos"
+    }
+   ]
   },
   {
    "fid": "A8",
@@ -1109,15 +1179,12 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R23",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A9",
@@ -1126,15 +1193,20 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "Testeo y compra de insumos plasticos con el mayor procentaje posible de plastico recilcado. Y utilizacion de de Big bags reutilizables (especificacion 6.1)",
-   "resp": "Adrian Cabrera",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Plastico reciclado Q1=25,8% // Q2=28,2% // Q3=24,5% // Q4=28,3%    No vemos posible aumentar mas  //////  En tanto los plastico de un solo uso han sido Q1=62,2% // Q2=57,9% // Q3=56,8% // Q4=31%",
    "id": "R24",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Testeo y compra de insumos plasticos con el mayor procentaje posible de plastico recilcado. Y utilizacion de de Big bags reutilizables (especificacion 6.1)",
+     "resp": "Adrian Cabrera",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Plastico reciclado Q1=25,8% // Q2=28,2% // Q3=24,5% // Q4=28,3%    No vemos posible aumentar mas  //////  En tanto los plastico de un solo uso han sido Q1=62,2% // Q2=57,9% // Q3=56,8% // Q4=31%"
+    }
+   ]
   },
   {
    "fid": "A10",
@@ -1143,15 +1215,20 @@
    "P": 2,
    "G": 2,
    "R": 4,
-   "accion": "Instalación de  aislamiento en determinadas zonas y nueva medición",
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Acción 1039",
    "id": "R25",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Instalación de  aislamiento en determinadas zonas y nueva medición",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Acción 1039"
+    }
+   ]
   },
   {
    "fid": "A14",
@@ -1160,15 +1237,20 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "Planificación de las jubilaciones",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "No se aprecian riesgos significativos",
    "id": "R26",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Planificación de las jubilaciones",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "No se aprecian riesgos significativos"
+    }
+   ]
   },
   {
    "fid": "A15",
@@ -1177,15 +1259,20 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "Definir un indicador y análisis de causas",
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Definir indicador, causas y medidas",
    "id": "R27",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Definir un indicador y análisis de causas",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Definir indicador, causas y medidas"
+    }
+   ]
   },
   {
    "fid": "A17",
@@ -1194,15 +1281,20 @@
    "P": 2,
    "G": 2,
    "R": 4,
-   "accion": "Intentar movernos hacia otros mercados y tipos de clientes",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ...",
    "id": "R28",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Intentar movernos hacia otros mercados y tipos de clientes",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ..."
+    }
+   ]
   },
   {
    "fid": "A18",
@@ -1211,15 +1303,12 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R29",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A19",
@@ -1228,15 +1317,12 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R30",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A20",
@@ -1245,15 +1331,20 @@
    "P": 2,
    "G": 2,
    "R": 4,
-   "accion": "Ampliar el rango de productos y servicios, mejorar nuestra competitividad",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Competencia china presente en España (AMPERE, COMETAL, Euskatfund, ...) y Portugal (R&B, Blasqem, Fundipor) a niveles de precio muy bajos (dumping), oferta de WINOA como único proveedor global a nivel mundial, abrasivos, servicio técnico, repuestos, reparaciones y mantenimientos, recogida de producto usado, maquinaria y otros abrasivos (cw)",
    "id": "R31",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Ampliar el rango de productos y servicios, mejorar nuestra competitividad",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Competencia china presente en España (AMPERE, COMETAL, Euskatfund, ...) y Portugal (R&B, Blasqem, Fundipor) a niveles de precio muy bajos (dumping), oferta de WINOA como único proveedor global a nivel mundial, abrasivos, servicio técnico, repuestos, reparaciones y mantenimientos, recogida de producto usado, maquinaria y otros abrasivos (cw)"
+    }
+   ]
   },
   {
    "fid": "A21",
@@ -1262,15 +1353,20 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "Cambiar la forma en la que nos dirijimos al mercado",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Debida a la situación de incertidumbre global, especialmente en la automoción. Se insisite a los clientes en la necesidad de disponer de previsiones con anticipación (disminución de los niveles de stock a nivel de grupo, working capital)",
    "id": "R32",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Cambiar la forma en la que nos dirijimos al mercado",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Debida a la situación de incertidumbre global, especialmente en la automoción. Se insisite a los clientes en la necesidad de disponer de previsiones con anticipación (disminución de los niveles de stock a nivel de grupo, working capital)"
+    }
+   ]
   },
   {
    "fid": "A22",
@@ -1279,15 +1375,12 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R33",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A23",
@@ -1296,15 +1389,20 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "Adaptar los procesos y potenciar otros productos y mercado",
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "El volumen dedicado al sector del granito es aprox. unas 500 t/año, no se espera una recuperación en los próximos ejercicios",
    "id": "R34",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Adaptar los procesos y potenciar otros productos y mercado",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "El volumen dedicado al sector del granito es aprox. unas 500 t/año, no se espera una recuperación en los próximos ejercicios"
+    }
+   ]
   },
   {
    "fid": "A25",
@@ -1313,15 +1411,20 @@
    "P": 2,
    "G": 2,
    "R": 4,
-   "accion": "Probar un traje aluminizado de mayor protección al calor que el actual",
-   "resp": "Arkaitz Garcia",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Ha sido probado por el delegado de prevención y el feed back es bueno. Lo van a probar los demás trabajadores.",
    "id": "R35",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "Probar un traje aluminizado de mayor protección al calor que el actual",
+     "resp": "Arkaitz Garcia",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Ha sido probado por el delegado de prevención y el feed back es bueno. Lo van a probar los demás trabajadores."
+    }
+   ]
   },
   {
    "fid": "A24",
@@ -1330,15 +1433,12 @@
    "P": 2,
    "G": 1,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R36",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "D12",
@@ -1347,15 +1447,12 @@
    "P": 1,
    "G": 2,
    "R": 2,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
    "id": "R37",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": []
   },
   {
    "fid": "A16",
@@ -1364,473 +1461,580 @@
    "P": 1,
    "G": 1,
    "R": 1,
-   "accion": "",
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "No es un problema en la actualidad",
    "id": "R38",
    "Pr": null,
    "Gr": null,
-   "Rr": null
+   "Rr": null,
+   "acciones": [
+    {
+     "accion": "",
+     "resp": "",
+     "plazo": "",
+     "estado": "",
+     "coment": "No es un problema en la actualidad"
+    }
+   ]
   }
  ],
  "opps": [
   {
    "fid": "F14",
-   "accion": "Implantarlo",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Mario Díez",
-   "plazo": "2025-06",
    "estado": "Cerrada",
-   "coment": "Trabajar en el volcado de la información del sistema de captura de datos, en el programa de nómina A3, pruebas iniciales realizadas",
-   "id": "O01"
+   "id": "O01",
+   "acciones": [
+    {
+     "accion": "Implantarlo",
+     "resp": "Mario Díez",
+     "plazo": "2025-06",
+     "estado": "Cerrada",
+     "coment": "Trabajar en el volcado de la información del sistema de captura de datos, en el programa de nómina A3, pruebas iniciales realizadas"
+    }
+   ]
   },
   {
    "fid": "F15",
-   "accion": "Implantarlo",
    "V": 1,
    "R": 2,
    "VR": 2,
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "",
-   "id": "O02"
+   "id": "O02",
+   "acciones": [
+    {
+     "accion": "Implantarlo",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "O3",
-   "accion": "Estudiar la electrificación del HR1",
    "V": 2,
    "R": 1,
    "VR": 2,
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2025-07",
    "estado": "Cerrada",
-   "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025",
-   "id": "O03"
+   "id": "O03",
+   "acciones": [
+    {
+     "accion": "Estudiar la electrificación del HR1",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2025-07",
+     "estado": "Cerrada",
+     "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025"
+    }
+   ]
   },
   {
    "fid": "O4",
-   "accion": "Tomar contacto con los institutos de FP de la zona",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "",
-   "id": "O04"
+   "id": "O04",
+   "acciones": [
+    {
+     "accion": "Tomar contacto con los institutos de FP de la zona",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "O5",
-   "accion": "Evaluación psicosocial y actuar en consecuencia",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Arkaitz García",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "La primera parte (cuantitativa) está realizada, falta por llevar a cabo la segunda parte (cualitativa), que se realizará este año.",
-   "id": "O05"
+   "id": "O05",
+   "acciones": [
+    {
+     "accion": "Evaluación psicosocial y actuar en consecuencia",
+     "resp": "Arkaitz García",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "La primera parte (cuantitativa) está realizada, falta por llevar a cabo la segunda parte (cualitativa), que se realizará este año."
+    }
+   ]
   },
   {
    "fid": "O8",
-   "accion": "Asistir a formaciones en IA",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Mario Díez",
-   "plazo": "2025-07",
    "estado": "Cerrada",
-   "coment": "Se ha realizado una formación sobre chat gpt.",
-   "id": "O06"
+   "id": "O06",
+   "acciones": [
+    {
+     "accion": "Asistir a formaciones en IA",
+     "resp": "Mario Díez",
+     "plazo": "2025-07",
+     "estado": "Cerrada",
+     "coment": "Se ha realizado una formación sobre chat gpt."
+    }
+   ]
   },
   {
    "fid": "F20",
-   "accion": "Completar la documentación en tiempo y forma",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Adrián Cabrera",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Presentada en plazo y forma",
-   "id": "O07"
+   "id": "O07",
+   "acciones": [
+    {
+     "accion": "Completar la documentación en tiempo y forma",
+     "resp": "Adrián Cabrera",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Presentada en plazo y forma"
+    }
+   ]
   },
   {
    "fid": "F21",
-   "accion": "Cerrar la compra del 10% en sucesivos años",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Adrián Cabrera",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Comprada a STX en 2024",
-   "id": "O08"
+   "id": "O08",
+   "acciones": [
+    {
+     "accion": "Cerrar la compra del 10% en sucesivos años",
+     "resp": "Adrián Cabrera",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Comprada a STX en 2024"
+    }
+   ]
   },
   {
    "fid": "F22",
-   "accion": "",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Alfredo Santos",
-   "plazo": "",
    "estado": "Cerrada",
-   "coment": "",
-   "id": "O09"
+   "id": "O09",
+   "acciones": [
+    {
+     "accion": "",
+     "resp": "Alfredo Santos",
+     "plazo": "",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "F23",
-   "accion": "",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Alfredo Santos",
-   "plazo": "",
    "estado": "Cerrada",
-   "coment": "Evaluación realizada a nivel de grupo",
-   "id": "O10"
+   "id": "O10",
+   "acciones": [
+    {
+     "accion": "",
+     "resp": "Alfredo Santos",
+     "plazo": "",
+     "estado": "Cerrada",
+     "coment": "Evaluación realizada a nivel de grupo"
+    }
+   ]
   },
   {
    "fid": "F24",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O11"
+   "id": "O11",
+   "acciones": []
   },
   {
    "fid": "F25",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O12"
+   "id": "O12",
+   "acciones": []
   },
   {
    "fid": "O9",
-   "accion": "Estudiar la electrificación del HR1",
    "V": 2,
    "R": 1,
    "VR": 2,
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2026-07",
    "estado": "Cerrada",
-   "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025",
-   "id": "O13"
+   "id": "O13",
+   "acciones": [
+    {
+     "accion": "Estudiar la electrificación del HR1",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2026-07",
+     "estado": "Cerrada",
+     "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025"
+    }
+   ]
   },
   {
    "fid": "O10",
-   "accion": "Pedir propuestas a proveedores",
    "V": 2,
    "R": 3,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2026-07",
    "estado": "Cerrada",
-   "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)",
-   "id": "O14"
+   "id": "O14",
+   "acciones": [
+    {
+     "accion": "Pedir propuestas a proveedores",
+     "resp": "Alfredo Santos",
+     "plazo": "2026-07",
+     "estado": "Cerrada",
+     "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)"
+    }
+   ]
   },
   {
    "fid": "O11",
-   "accion": "Encargar un estudio",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Dic 25 Se descarta ya que las inversiones las centramos en H3 y H4 donde tenemos mayor efecto positivo en la reducción del coste de producción",
-   "id": "O15"
+   "id": "O15",
+   "acciones": [
+    {
+     "accion": "Encargar un estudio",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Dic 25 Se descarta ya que las inversiones las centramos en H3 y H4 donde tenemos mayor efecto positivo en la reducción del coste de producción"
+    }
+   ]
   },
   {
    "fid": "F1",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O16"
+   "id": "O16",
+   "acciones": []
   },
   {
    "fid": "F2",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O17"
+   "id": "O17",
+   "acciones": []
   },
   {
    "fid": "F3",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O18"
+   "id": "O18",
+   "acciones": []
   },
   {
    "fid": "F4",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O19"
+   "id": "O19",
+   "acciones": []
   },
   {
    "fid": "F5",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O20"
+   "id": "O20",
+   "acciones": []
   },
   {
    "fid": "F6",
-   "accion": "Transmitir a los nuevos empleados los conocimientos de las personas más veteranas (contratos relevo)",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2026-12",
    "estado": "En curso",
-   "coment": "Relevo generacional mediante la fórmula de contrato relevo",
-   "id": "O21"
+   "id": "O21",
+   "acciones": [
+    {
+     "accion": "Transmitir a los nuevos empleados los conocimientos de las personas más veteranas (contratos relevo)",
+     "resp": "Alfredo Santos",
+     "plazo": "2026-12",
+     "estado": "En curso",
+     "coment": "Relevo generacional mediante la fórmula de contrato relevo"
+    }
+   ]
   },
   {
    "fid": "F7",
-   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "El equipo de Ventas en Iberia tiene amplia experiencia y conocimiento del mercado y esto es óptimo para la integración de nuevos productos (cut wire y granalladoras) derivados de la integración en SINTO",
-   "id": "O22"
+   "id": "O22",
+   "acciones": [
+    {
+     "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "El equipo de Ventas en Iberia tiene amplia experiencia y conocimiento del mercado y esto es óptimo para la integración de nuevos productos (cut wire y granalladoras) derivados de la integración en SINTO"
+    }
+   ]
   },
   {
    "fid": "F8",
-   "accion": "Mantenimiento de un nivel elevado en la calidad del producto, especialmente en el proceso de templado",
    "V": 3,
    "R": 1,
    "VR": 3,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Lo utilizamos como un argumento de peso ante la entrada de material extranjero, especialmente de China",
-   "id": "O23"
+   "id": "O23",
+   "acciones": [
+    {
+     "accion": "Mantenimiento de un nivel elevado en la calidad del producto, especialmente en el proceso de templado",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Lo utilizamos como un argumento de peso ante la entrada de material extranjero, especialmente de China"
+    }
+   ]
   },
   {
    "fid": "F9",
-   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende",
-   "id": "O24"
+   "id": "O24",
+   "acciones": [
+    {
+     "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende"
+    }
+   ]
   },
   {
    "fid": "F10",
-   "accion": "Mantener el nivel de servicio, optimizando la producción y las entregas (shortages, V-Jet)",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "La planta de Balmaseda tiene un elevado nivel de flexibilidad y capacidad de adaptación para servir pedidos en un plazo corto de tiempo",
-   "id": "O25"
+   "id": "O25",
+   "acciones": [
+    {
+     "accion": "Mantener el nivel de servicio, optimizando la producción y las entregas (shortages, V-Jet)",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "La planta de Balmaseda tiene un elevado nivel de flexibilidad y capacidad de adaptación para servir pedidos en un plazo corto de tiempo"
+    }
+   ]
   },
   {
    "fid": "F11",
-   "accion": "Potenciar la recogida de residuo, mejora en el FCoP",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "Se incrementa la actividad de recogida de producto usado de nuestros clientes, alineado con la producción de briquetas in house",
-   "id": "O26"
+   "id": "O26",
+   "acciones": [
+    {
+     "accion": "Potenciar la recogida de residuo, mejora en el FCoP",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "Se incrementa la actividad de recogida de producto usado de nuestros clientes, alineado con la producción de briquetas in house"
+    }
+   ]
   },
   {
    "fid": "F12",
-   "accion": "Intensificar las reuniones con la parte social hasta alcanzar un acuerdo",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Mario Díez",
-   "plazo": "2025-06",
    "estado": "Cerrada",
-   "coment": "Se intentará alcanzar un acuerdo para 2 años",
-   "id": "O27"
+   "id": "O27",
+   "acciones": [
+    {
+     "accion": "Intensificar las reuniones con la parte social hasta alcanzar un acuerdo",
+     "resp": "Mario Díez",
+     "plazo": "2025-06",
+     "estado": "Cerrada",
+     "coment": "Se intentará alcanzar un acuerdo para 2 años"
+    }
+   ]
   },
   {
    "fid": "F13",
-   "accion": "Trabajar estas buenas relaciones mediante reuniones y contactos periodicos",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "",
-   "id": "O28"
+   "id": "O28",
+   "acciones": [
+    {
+     "accion": "Trabajar estas buenas relaciones mediante reuniones y contactos periodicos",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "F16",
-   "accion": "Realización de charlas de sensibilización sobre cultura preventiva; semana de la seguridad ;Safety talks sobre diferentes asuntos.",
    "V": 3,
    "R": 3,
    "VR": 9,
-   "resp": "Arkaitz García",
-   "plazo": "2026-12",
    "estado": "Cerrada",
-   "coment": "Se han realizado dos semanas con diversas formaciones de sguridad al día, en abril y en septiembre.",
-   "id": "O29"
+   "id": "O29",
+   "acciones": [
+    {
+     "accion": "Realización de charlas de sensibilización sobre cultura preventiva; semana de la seguridad ;Safety talks sobre diferentes asuntos.",
+     "resp": "Arkaitz García",
+     "plazo": "2026-12",
+     "estado": "Cerrada",
+     "coment": "Se han realizado dos semanas con diversas formaciones de sguridad al día, en abril y en septiembre."
+    }
+   ]
   },
   {
    "fid": "F17",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O30"
+   "id": "O30",
+   "acciones": []
   },
   {
    "fid": "F18",
-   "accion": "Estudiar cada uno de los contratos de relevo de manera individualizada",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Mario Díez",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "",
-   "id": "O31"
+   "id": "O31",
+   "acciones": [
+    {
+     "accion": "Estudiar cada uno de los contratos de relevo de manera individualizada",
+     "resp": "Mario Díez",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "F19",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O32"
+   "id": "O32",
+   "acciones": []
   },
   {
    "fid": "O1",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O33"
+   "id": "O33",
+   "acciones": []
   },
   {
    "fid": "O2",
-   "accion": "",
    "V": null,
    "R": null,
    "VR": 0,
-   "resp": "",
-   "plazo": "",
    "estado": "",
-   "coment": "",
-   "id": "O34"
+   "id": "O34",
+   "acciones": []
   },
   {
    "fid": "O6",
-   "accion": "En 2025 comenzamos varias acciones encaminadas a este tema:\neliminación de los registros en papel;\nintroducción de los datos por parte de producción en sistema online;\ncreación de base de datos.",
    "V": 2,
    "R": 2,
    "VR": 4,
-   "resp": "Carlos Urbasos",
-   "plazo": "2026-12",
    "estado": "Cerrada",
-   "coment": "",
-   "id": "O35"
+   "id": "O35",
+   "acciones": [
+    {
+     "accion": "En 2025 comenzamos varias acciones encaminadas a este tema:\neliminación de los registros en papel;\nintroducción de los datos por parte de producción en sistema online;\ncreación de base de datos.",
+     "resp": "Carlos Urbasos",
+     "plazo": "2026-12",
+     "estado": "Cerrada",
+     "coment": ""
+    }
+   ]
   },
   {
    "fid": "O7",
-   "accion": "",
    "V": 2,
    "R": 1,
    "VR": 2,
-   "resp": "Alberto Vidaurrazaga",
-   "plazo": "2026-12",
    "estado": "Cerrada",
-   "coment": "Postpuesto a nivel de grupo a Q1-26",
-   "id": "O36"
+   "id": "O36",
+   "acciones": [
+    {
+     "accion": "",
+     "resp": "Alberto Vidaurrazaga",
+     "plazo": "2026-12",
+     "estado": "Cerrada",
+     "coment": "Postpuesto a nivel de grupo a Q1-26"
+    }
+   ]
   },
   {
    "fid": "O12",
-   "accion": "Intentar potenciar nuevos nichos de mercado, p.e. eólico, sustituyendo a otros en declive, p.e. granito",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "Cerrada",
-   "coment": "La caída de actividad por la crisis en la automoción no está suponiendo un golpe definitivo en nuestra carga de trabajo. La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ...",
-   "id": "O37"
+   "id": "O37",
+   "acciones": [
+    {
+     "accion": "Intentar potenciar nuevos nichos de mercado, p.e. eólico, sustituyendo a otros en declive, p.e. granito",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "Cerrada",
+     "coment": "La caída de actividad por la crisis en la automoción no está suponiendo un golpe definitivo en nuestra carga de trabajo. La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ..."
+    }
+   ]
   },
   {
    "fid": "O13",
-   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
    "V": 3,
    "R": 2,
    "VR": 6,
-   "resp": "Alfredo Santos",
-   "plazo": "2025-12",
    "estado": "En curso",
-   "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende",
-   "id": "O38"
+   "id": "O38",
+   "acciones": [
+    {
+     "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
+     "resp": "Alfredo Santos",
+     "plazo": "2025-12",
+     "estado": "En curso",
+     "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende"
+    }
+   ]
   }
  ],
  "objetivos": [

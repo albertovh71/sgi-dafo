@@ -26,7 +26,7 @@ Producción: <https://sgi.albertovh71.com> (Cloudflare Tunnel + Cloudflare Acces
 
 ## Modelo
 Tabla `items(col, id, data JSON)` con las colecciones `meta`, `factors`, `parties`, `risks`, `opps`, `objetivos`, `rev_texto`;
-tabla `imgs` para las imágenes de la revisión. Reglas: R = P×G (1–3), VR = V×R; R ≥ 4 o G = 3 exige acción o justificación;
+tabla `imgs` para las imágenes de la revisión. Cada riesgo/oportunidad tiene una o varias acciones (`acciones[]` con acción, responsable, plazo, estado, comentarios); su estado se deriva de ellas. Los cambios en factores desde Externo/Interno pasan por un borrador que se aplica o se deshace. Reglas: R = P×G (1–3), VR = V×R; R ≥ 4 o G = 3 exige acción o justificación;
 estados `En curso` / `Cerrada` / vacío; el proceso (PG/PS) se elige en el factor y lo heredan riesgos y oportunidades.
 
 ## Copia de seguridad
