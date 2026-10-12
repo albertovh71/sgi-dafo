@@ -35,7 +35,9 @@ function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.e
 const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
 const valorado=x=>('P' in x)?(!!x.P&&!!x.G):(!!x.V&&!!x.R);
 // un factor está evaluado cuando tiene fila de riesgo/oportunidad Y está valorada (P y G, o V y R)
-const evaluado=f=>{const x=fila0(f);return x&&valorado(x)?x:null};
+// Riesgo: evaluado si P y G están valoradas. Oportunidad: evaluada si tiene V y R, o si no tiene ninguna acción
+// (una oportunidad sin acción y sin valorar se considera descartada, no pendiente).
+const evaluado=f=>{const x=fila0(f);if(!x)return null;if(valorado(x))return x;return(('P' in x)||tieneAcc(x))?null:x};
 
 function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=(r.P&&r.G)?r.P*r.G:null;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
 function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
@@ -240,7 +242,7 @@ function dafo(){
   const m=D.meta, orden=[...Object.values(PROCS),'(sin proceso)'];
   const par=(a,b,ta,tb)=>{
     const cel=f=>{if(!f)return '<td></td><td></td>';const e=evaluado(f),neg=f.tipo==='D'||f.tipo==='A';
-      const bd=e?(neg?`<span class="pill ${lvl(e.R)}">R ${e.R??'—'}</span>`:`<span class="pill ${lvl(e.VR)}">VR ${e.VR??'—'}</span>`):`${fila0(f)?'<span class="pill n">pendiente de evaluar</span> ':''}<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
+      const bd=e?(neg?`<span class="pill ${lvl(e.R)}">R ${e.R??'—'}</span>`:`<span class="pill ${valorado(e)?lvl(e.VR):'n'}">VR ${valorado(e)?e.VR:'—'}</span>`):`${fila0(f)?'<span class="pill n">pendiente de evaluar</span> ':''}<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
       return `<td>${esc(f.texto)} <button class="ed" title="Editar" onclick="editar('factor','${f.id}')">✎</button></td><td class="xx">${bd}</td>`};
     const grupos=orden.map(p=>{
       const A=D.factors.filter(f=>f.tipo===a&&okProc(f.proceso)&&proc(f.proceso)===p), B=D.factors.filter(f=>f.tipo===b&&okProc(f.proceso)&&proc(f.proceso)===p);
@@ -326,7 +328,7 @@ function oport(){
   if(S.orden==='R')l.sort((a,b)=>(b[0].VR||0)-(a[0].VR||0));
   const sel=(i,f,cur,opts)=>`<select onchange="setO(${i},'${f}',this.value)">${opts.map(o=>`<option value="${o}" ${String(cur??'')===String(o)?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
   const selA=(i,j,cur)=>`<select onchange="setAcc('opps',${i},${j},'estado',this.value)">${ESTADOS.map(o=>`<option value="${o}" ${(cur||'')===o?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
-  const sinVal=D.opps.filter(o=>!o.V||!o.R).length, sinEst=D.opps.filter(o=>!o.estado).length;
+  const sinVal=D.opps.filter(o=>(!o.V||!o.R)&&tieneAcc(o)).length, sinEst=D.opps.filter(o=>!o.estado).length;
   const sinAccO=D.opps.filter(o=>requiereO(o)&&!tieneAcc(o)&&!o.just).length;
   const fila=([o,i])=>{
     const A=accs(o).length?accs(o):[null], n=A.length, rs=n>1?` rowspan="${n}"`:'';
@@ -347,7 +349,7 @@ function oport(){
    <div class="card kpi"><b>${D.opps.filter(o=>o.estado==='En curso').length}</b><span>en curso</span></div>
    <div class="card kpi"><b>${D.opps.filter(o=>o.estado==='Cerrada').length}</b><span>cerradas</span></div>
    <div class="card kpi"><b class="${sinEst?'warn':''}">${sinEst}</b><span>sin estado</span></div>
-   <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>sin valorar (V o R vacíos)</span></div>
+   <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>con acción y sin valorar (V o R vacíos)</span></div>
    <div class="card kpi"><b class="${sinAccO?'warn':''}">${sinAccO}</b><span>V×R = 9 sin acción ni justificación</span></div></div>
   <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('opp',null)">+ Añadir oportunidad</button></div>
@@ -619,7 +621,7 @@ const KIND={
   opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',acc:true,nuevo:()=>({fid:'',V:null,R:null,VR:0,acciones:[],estado:'',just:''}),
     span:{fid:4,V:1,R:1,estado:2,just:4},
     campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST],['just','Justificación (V×R = 9 sin acción)','area']],
-    req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&(!o.V||!o.R))?'Valora la viabilidad (V) y la rentabilidad (R) de la oportunidad':''),
+    req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&tieneAcc(o)&&(!o.V||!o.R))?'Si la oportunidad tiene acción, valora su viabilidad (V) y rentabilidad (R)':''),
     post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
   obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:S.ano||String(new Date().getFullYear()),origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
     campos:[['anio','Año','text'],['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
