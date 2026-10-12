@@ -635,9 +635,10 @@ const KIND={
     campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST],['just','Justificación (V×R = 9 sin acción)','area']],
     req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&tieneAcc(o)&&(!o.V||!o.R))?'Si la oportunidad tiene acción, valora su viabilidad (V) y rentabilidad (R)':''),
     post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
-  obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:CICLO,origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
-    campos:[['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
-      ['t0','Resultado T1','text'],['t1','Resultado T2','text'],['t2','Resultado T3','text'],['t3','Resultado T4','text'],['res0','Observación T1','area'],['res1','Observación T2','area'],['res2','Observación T3','area'],['res3','Observación T4','area'],['seg','Conclusión del seguimiento','area']],
+  obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',wide:true,nuevo:()=>({anio:CICLO,origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
+    span:{objetivo:2,acciones:2,seg:3},
+    campos:[['objetivo','Objetivo','area'],['acciones','Acciones','area'],['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],['seg','Conclusión del seguimiento','area'],
+      ['t0','Resultado T1','text'],['t1','Resultado T2','text'],['t2','Resultado T3','text'],['t3','Resultado T4','text'],['res0','Observación T1','area'],['res1','Observación T2','area'],['res2','Observación T3','area'],['res3','Observación T4','area']],
     req:()=>''},
   meta:{col:'meta',list:()=>[D.meta],titulo:'Datos generales',pref:'M',nuevo:()=>({}),
     campos:[['fecha','Fecha de elaboración','date'],['participantes','Participantes (uno por línea)','lines']],req:()=>''},
@@ -714,11 +715,11 @@ function pintarModal(){
       <label class="fl"><span>Estado</span><select data-a="${j}" data-k="estado">${SEL_EST.map(([v,t])=>`<option value="${v}" ${(a.estado||'')===v?'selected':''}>${t}</option>`).join('')}</select></label>
       <label class="fl"><span>Comentarios</span><textarea data-a="${j}" data-k="coment" rows="2">${esc(a.coment)}</textarea></label></div></div>`).join('')}
     <button class="btn" onclick="accAnadir()">+ Añadir acción</button>`;
-  document.getElementById('modal').innerHTML=`<div class="mbg" onclick="if(event.target===this)cerrar()"><div class="mbox ${K.acc?'wide':''}" role="dialog">
+  document.getElementById('modal').innerHTML=`<div class="mbg" onclick="if(event.target===this)cerrar()"><div class="mbox ${K.acc||K.wide?'wide':''}" role="dialog">
     <h2>${M.id?'Editar':'Nuevo'} · ${K.titulo}</h2>
     <datalist id="dl_ori">${[...new Set(D.objs.map(f=>f.origen).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     ${M.kind==='fdraft'?`<p class="mut" style="margin:0 0 8px">Aspecto: <b>${esc(M.pre.cat)}</b></p>`:''}
-    <div class="mform ${K.acc?'w4':''}">${K.campos.map(fld).join('')}</div>
+    <div class="mform ${K.acc||K.wide?'w4':''}">${K.campos.map(fld).join('')}</div>
     ${accHtml()}
     <div class="merr" id="merr"></div>
     <div class="mbtn">${M.id&&!K.noDel&&M.kind!=='meta'?'<button class="btn danger" onclick="borrar()">Eliminar</button>':''}<span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="aceptar()">${K.local?'Aceptar':'Guardar'}</button></div>
