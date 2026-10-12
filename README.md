@@ -29,5 +29,16 @@ Tabla `items(col, id, data JSON)` con las colecciones `meta`, `factors`, `partie
 tabla `imgs` para las imágenes de la revisión. Cada riesgo/oportunidad tiene una o varias acciones (`acciones[]` con acción, responsable, plazo, estado, comentarios); su estado se deriva de ellas. Los cambios en factores desde Externo/Interno pasan por un borrador que se aplica o se deshace. Reglas: R = P×G (1–3), VR = V×R; R ≥ 4 o G = 3 exige acción o justificación;
 estados `En curso` / `Cerrada` / vacío; el proceso (PG/PS) se elige en el factor y lo heredan riesgos y oportunidades.
 
+## Ciclos anuales (histórico)
+Cada año es un **ciclo** completo (DAFO, partes, riesgos, oportunidades, objetivos y revisión por la dirección): una «foto» por año.
+- Un ciclo **cerrado** es de **solo lectura** (la API responde 409). **No se puede reabrir desde la aplicación**.
+- Crear el ciclo siguiente (solo desde uno cerrado): copia partes y factores (mismos ids), riesgos y oportunidades **sin valorar**
+  (con la valoración anterior como referencia `prev`), las acciones **abiertas** continúan y las cerradas se quedan en el año anterior;
+  objetivos nuevos con origen/indicador y el último resultado como referencia (si ya hay objetivos preparados para ese año, se respetan);
+  revisión en blanco.
+- Administración desde el servidor: `node server/ciclo.cjs listar | reabrir AAAA | cerrar AAAA`.
+- `GET /api/data?c=AAAA`, `GET /api/ciclos`, `POST /api/ciclos {desde, anio}`, `POST /api/ciclos/AAAA/cerrar`.
+  Las colecciones se escriben con `?c=AAAA`.
+
 ## Copia de seguridad
 Incluida en `/home/ubuntu/backups/backup.py` (diaria 03:30, cifrada a Drive).

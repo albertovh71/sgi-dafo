@@ -111,3 +111,12 @@ td.tg:hover{background:var(--green-pale)}
 /* resaltado de la fila a la que te lleva «Evaluar» */
 @keyframes flashrow{0%,60%{background:rgba(220,38,38,.22)}100%{background:transparent}}
 tr.flash>td{animation:flashrow 1.8s ease-out}
+
+/* ciclos anuales */
+.ciclo{margin-left:auto;display:flex;gap:8px;align-items:center}
+.badge{font-size:11px;font-weight:700;border-radius:20px;padding:2px 10px;text-transform:uppercase;letter-spacing:.3px}
+.badge.abierto{background:var(--green-pale);color:var(--green-dark)}
+.badge.cerrado{background:#fdeceb;color:var(--bad)}
+.robanner{background:#fdeceb;color:#7a1f18;border:1px solid #f0b9b5;border-radius:8px;padding:8px 12px;margin-bottom:12px}
+.prev{font-size:10px;color:var(--muted);white-space:nowrap;margin-top:2px}
+.ro tr.cat{cursor:pointer}

@@ -1,4 +1,5 @@
 
+let CICLO='',CICLOS=[],RO=false;
 let D={meta:{id:'main',fecha:'',participantes:[]},factors:[],parties:[],risks:[],opps:[],objs:[]};
 // ---- Procesos (lista del usuario, tal como está en su Excel)
 const PROCS={PG01:'PG01 GESTION ESTRATEGICA',PG02:'PG02 MEJORA CONTINUA',PG03:'PG03 GESTION PERSONAS',PG04:'PG04 GESTION DOCUMENTAL',PG05:'PG05 GESTION INSTALACIONES',PG06:'PG06 QHSE GE',PS01:'PS01 GESTION COMERCIAL',PS02:'PS02 APROVISIONAMIENTOS',PS03:'PS03 FABRICACION',PS04:'PS04 LOGISTICA Y EXPEDICIONES',PS05:'PS05 SUPPLY CHAIN'};
@@ -12,13 +13,12 @@ const lvl=r=>r>=6?'r':r>=3?'y':r>=1?'g':'n';
 let fm={};const reindex=()=>{fm=Object.fromEntries(D.factors.map(f=>[f.id,f]))};
 const rp=x=>x.fid&&fm[x.fid]?fm[x.fid].proceso:x.proceso;
 const rt=x=>x.fid&&fm[x.fid]?fm[x.fid].texto:x.factor;
-const objsAno=a=>D.objs.filter(o=>o.anio===a);
-const anios=()=>[...new Set(D.objs.map(o=>o.anio))].sort().reverse();
+
 const ESTADOS=['','En curso','Cerrada'];
 const abierto=e=>e!=='Cerrada';
 const requiere=r=>(r.R||0)>=4||r.G===3;
 const requiereO=o=>(o.VR||0)>=9;
-const procSel=()=>`<select onchange="S.proceso=this.value;render()"><option value="">Todos los procesos</option>${Object.values(PROCS).map(p=>`<option ${S.proceso===p?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
+const procSel=()=>`<select class="keep" onchange="S.proceso=this.value;render()"><option value="">Todos los procesos</option>${Object.values(PROCS).map(p=>`<option ${S.proceso===p?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
 const okProc=p=>!S.proceso||proc(p)===S.proceso;
 const fecha=f=>/^\d{4}-\d\d(-\d\d)?$/.test(f)?f.split('-').reverse().join('/'):f;
 const finPlazo=p=>/^\d{4}-\d\d$/.test(p)?p+'-31':p;
@@ -45,7 +45,7 @@ function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guar
 let FOCO=null;
 // Cada factor del DAFO tiene siempre su fila en Riesgos (D, A) u Oportunidades (F, O), sin valorar hasta que el usuario la evalúe.
 async function asegurarFilas(){
-  const nuevos=[];
+  const nuevos=[];if(RO)return 0;
   for(const f of D.factors){
     if(fila0(f))continue;
     if(f.tipo==='D'||f.tipo==='A'){const r={id:'R-'+f.id,fid:f.id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null};D.risks.push(r);nuevos.push(['risks',r])}
@@ -64,8 +64,10 @@ function evaluar(id){const f=fm[id];
 const TABS=[['general','Datos generales'],['partes','Partes'],['externo','Externo'],['interno','Interno'],['dafo','DAFO'],['riesgos','Riesgos'],['oport','Oportunidades'],null,['procesos','Procesos'],['objetivos','Objetivos'],['revision','Revisión dirección'],null,['flujo','Flujo'],['criterios','Criterios'],['coherencia','Coherencia']];
 function render(){
   document.getElementById('tabs').innerHTML=TABS.map(t=>t?`<button class="${S.tab===t[0]?'on':''}" onclick="irTab('${t[0]}')">${t[1]}</button>`:'<span class="sep"></span>').join('');
-  document.getElementById('wrap').className='wrap'+(S.tab==='riesgos'||S.tab==='oport'?' wide':'');
+  document.getElementById('wrap').className='wrap'+(S.tab==='riesgos'||S.tab==='oport'?' wide':'')+(RO?' ro':'');
   document.getElementById('view').innerHTML=VIEWS[S.tab]();
+  pintarCiclo();
+  if(RO)document.querySelectorAll('#view button:not(.keep),#view select:not(.keep),#view input,#view textarea').forEach(e=>{e.disabled=true});
   if(FOCO){const id=FOCO;FOCO=null;
     const rows=[...document.querySelectorAll('#view tr[data-rid]')].filter(r=>r.dataset.rid===id);
     if(rows.length){const tb=rows[0].closest('tbody');if(tb)tb.classList.remove('shut');
@@ -89,7 +91,7 @@ function general(){
    <div class="card kpi"><b>${D.risks.length+D.opps.length}</b><span>riesgos y oportunidades (${D.risks.length} + ${D.opps.length})</span></div></div>
   <div class="card pad" style="max-width:560px"><h2>Datos generales <button class="btn ed" onclick="editar('meta','main')">✎ Editar</button></h2>
    <table><tbody><tr><th>Fecha de elaboración</th><td>${esc(fecha(m.fecha))}</td></tr>
-   <tr><th>Participantes</th><td>${m.participantes.map(esc).join('<br>')||'<span class="mut">—</span>'}</td></tr></tbody></table></div>`;
+   <tr><th>Participantes</th><td>${m.participantes.map(esc).join('<br>')||'<span class="mut">—</span>'}</td></tr></tbody></table></div>${cicloCard()}`;
 }
 const pl2=c=>c.toLowerCase().replace(/d$/,'des')+(/d$/.test(c)?'':'s');
 // ---- Borrador de cambios en factores (Externo / Interno): nada se aplica hasta confirmar
@@ -100,7 +102,7 @@ const fdDirty=()=>!!FD&&(JSON.stringify(FD)!==JSON.stringify(D.factors)||FE.exte
 const TABT={externo:['A','O'],interno:['D','F']};
 function fdGrupo(id){const f=FD.find(x=>x.id===id);if(!f)return [];const tab=(TABT.externo.includes(f.tipo))?'externo':'interno';
   return FD.filter(x=>(x.cat||'')===(f.cat||'')&&x.texto===f.texto&&TABT[tab].includes(x.tipo))}
-function fdToggle(id,w){fdStart();const g=fdGrupo(id);if(!g.length)return;const tab=TABT.externo.includes(g[0].tipo)?'externo':'interno',t=TABT[tab][w];
+function fdToggle(id,w){if(RO)return;fdStart();const g=fdGrupo(id);if(!g.length)return;const tab=TABT.externo.includes(g[0].tipo)?'externo':'interno',t=TABT[tab][w];
   const ex=g.find(x=>x.tipo===t);
   if(ex){if(g.length===1){toast('Un factor necesita al menos una opción. Para quitarlo usa la papelera.',true);return}FD=FD.filter(x=>x.id!==ex.id)}
   else FD.push({id:nid('F'),tipo:t,texto:g[0].texto,cat:g[0].cat,proceso:g[0].proceso||''});
@@ -248,7 +250,7 @@ function criterios(){
 }
 
 function plegar(v){document.querySelectorAll('details.pl').forEach(d=>d.open=v);document.querySelectorAll('tbody.pl').forEach(t=>t.classList.toggle('shut',!v))}
-const plBar=`<div class="bar"><button class="btn" onclick="plegar(true)">Desplegar todo</button><button class="btn" onclick="plegar(false)">Plegar todo</button></div>`;
+const plBar=`<div class="bar"><button class="btn keep" onclick="plegar(true)">Desplegar todo</button><button class="btn keep" onclick="plegar(false)">Plegar todo</button></div>`;
 function dafo(){
   const m=D.meta, orden=[...Object.values(PROCS),'(sin proceso)'];
   const par=(a,b,ta,tb)=>{
@@ -277,7 +279,7 @@ function partes(){
    <div class="card kpi"><b>${D.parties.filter(p=>p.tipo==='externa').length}</b><span>externos</span></div>
    <div class="card kpi"><b>${D.parties.filter(p=>p.tipo==='interna').length}</b><span>internos</span></div>
    <div class="card kpi"><b class="${sinReq?'warn':''}">${sinReq}</b><span>sin requisitos para el sistema</span></div>
-   <div class="card kpi"><b class="${sinExp?'warn':''}">${sinExp}</b><span>sin expectativas</span></div></div>`+`<div class="bar"><button class="btn" onclick="plegar(true)">Desplegar todo</button><button class="btn" onclick="plegar(false)">Plegar todo</button><button class="btn pri" style="margin-left:auto" onclick="editar('party',null)">+ Añadir grupo de interés</button></div>`+`<div class="card scroll"><table class="asp"><colgroup><col style="width:16%"><col style="width:28%"><col style="width:28%"><col style="width:28%"></colgroup>
+   <div class="card kpi"><b class="${sinExp?'warn':''}">${sinExp}</b><span>sin expectativas</span></div></div>`+`<div class="bar"><button class="btn keep" onclick="plegar(true)">Desplegar todo</button><button class="btn keep" onclick="plegar(false)">Plegar todo</button><button class="btn pri" style="margin-left:auto" onclick="editar('party',null)">+ Añadir grupo de interés</button></div>`+`<div class="card scroll"><table class="asp"><colgroup><col style="width:16%"><col style="width:28%"><col style="width:28%"><col style="width:28%"></colgroup>
   <thead><tr><th>Grupos de interés</th><th>Necesidades</th><th>Expectativas</th><th>Requisitos para el Sistema</th></tr></thead>
   ${g.map(([k,n])=>{const l=D.parties.filter(p=>p.tipo===k);
     return `<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="4"><span class="chev"></span>${n} <span class="mut" style="font-weight:400">· ${l.length}</span></td></tr>
@@ -289,7 +291,7 @@ function porProc(l,key,cols,fn,abiertoFn){
   const gs=orden.map(p=>[p,l.filter(x=>proc(key(x))===p)]).filter(([,v])=>v.length);
   return gs.map(([p,v])=>`<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="${cols}"><span class="chev"></span>${esc(p)} <span class="mut" style="font-weight:400">· ${v.length}${abiertoFn?` · ${v.filter(abiertoFn).length} abiertos`:''}</span></td></tr>${v.map(x=>fn(x).replace(/<tr(?=[ >])/g,'<tr class="it"')).join('')}</tbody>`).join('')||`<tbody><tr><td colspan="${cols}" class="mut">Sin elementos con este filtro</td></tr></tbody>`;
 }
-function ordenSel(){return `<select onchange="S.orden=this.value;render()"><option value="excel" ${S.orden==='excel'?'selected':''}>Orden original</option><option value="R" ${S.orden==='R'?'selected':''}>Mayor R primero</option></select>`}
+function ordenSel(){return `<select class="keep" onchange="S.orden=this.value;render()"><option value="excel" ${S.orden==='excel'?'selected':''}>Orden original</option><option value="R" ${S.orden==='R'?'selected':''}>Mayor R primero</option></select>`}
 function riesgos(){
   const idx=D.risks.map((r,i)=>[r,i]);
   const l=idx.filter(([r])=>okProc(rp(r))&&(S.estado==='todos'||(S.estado==='abiertos'?abierto(r.estado):r.estado===S.estado)));
@@ -309,7 +311,7 @@ function riesgos(){
       const first=j===0, last=j===n-1;
       const add=last?`<div><button class="ed" onclick="editar('risk','${r.id}',{addAcc:1})">+ acción</button></div>`:'';
       const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
-        <td${rs}>${sel(i,'P',r.P,['',1,2,3])}</td><td${rs}>${sel(i,'G',r.G,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R??'—'}</span></td>`:'';
+        <td${rs}>${sel(i,'P',r.P,['',1,2,3])}</td><td${rs}>${sel(i,'G',r.G,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R??'—'}</span>${r.prev&&r.prev.R!=null?`<div class="prev">antes: P${r.prev.P}·G${r.prev.G}=${r.prev.R}</div>`:''}</td>`:'';
       const mid=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&requiere(r)&&!tieneAcc(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td>${esc(a.resp)}</td>
         <td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td>
         <td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
@@ -325,7 +327,7 @@ function riesgos(){
    <div class="card kpi"><b class="${D.risks.filter(r=>!r.estado).length?'warn':''}">${D.risks.filter(r=>!r.estado).length}</b><span>sin estado</span></div>
    <div class="card kpi"><b class="${sinAccion?'warn':''}">${sinAccion}</b><span>exigen acción y no la tienen</span></div>
    <div class="card kpi"><b class="${D.risks.filter(r=>!r.P||!r.G).length?'warn':''}">${D.risks.filter(r=>!r.P||!r.G).length}</b><span>sin valorar (P o G vacíos)</span></div></div>
-  <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
+  <div class="bar"><select class="keep" onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('risk',null)">+ Añadir riesgo</button></div>
   ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[11.5,9,8,5.5,5.5,3.5,14,7,5,6.5,11.5,6,6.5].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de riesgo</th><th>Causa</th><th>Efecto</th><th>P<small>probabilidad</small></th><th>G<small>gravedad</small></th><th>R</th><th>Acción</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th><th>Residual P'×G' <span class="nuevo">nuevo</span></th><th>Regla <span class="nuevo">nuevo</span></th></tr></thead>
   ${porProc(l,x=>rp(x[0]),13,fila,x=>abierto(x[0].estado))}
@@ -350,7 +352,7 @@ function oport(){
       const falta=(requiereO(o)&&!tieneAcc(o)&&!o.just)?`<div class="todo" style="padding:2px 6px">falta acción o justificación (V×R = 9)</div>`:'';
       const just=(requiereO(o)&&!tieneAcc(o))?`<input class="j" placeholder="Justificación…" value="${esc(o.just||'')}" onchange="setO(${i},'just',this.value)">`:'';
       const ac=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&!tieneAcc(o)?just:''}${add}</td>`:`<td>${falta||'<span class="mut">—</span>'}${just}${add}</td>`;
-      const vr=first?`<td${rs}>${sel(i,'V',o.V,['',1,2,3])}</td><td${rs}>${sel(i,'R',o.R,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(o.VR)}">${o.VR??0}</span></td>`:'';
+      const vr=first?`<td${rs}>${sel(i,'V',o.V,['',1,2,3])}</td><td${rs}>${sel(i,'R',o.R,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(o.VR)}">${o.VR??0}</span>${o.prev&&o.prev.VR?`<div class="prev">antes: V${o.prev.V}·R${o.prev.R}=${o.prev.VR}</div>`:''}</td>`:'';
       const rest=a?`<td>${esc(a.resp)}</td><td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td><td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
         :`<td></td><td></td><td>${sel(i,'estado',o.estado,ESTADOS)}</td><td></td>`;
       return `<tr data-rid="${o.id}">${l0}${ac}${vr}${rest}</tr>`}).join('');
@@ -362,7 +364,7 @@ function oport(){
    <div class="card kpi"><b class="${sinEst?'warn':''}">${sinEst}</b><span>sin estado</span></div>
    <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>con acción y sin valorar (V o R vacíos)</span></div>
    <div class="card kpi"><b class="${sinAccO?'warn':''}">${sinAccO}</b><span>V×R = 9 sin acción ni justificación</span></div></div>
-  <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
+  <div class="bar"><select class="keep" onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('opp',null)">+ Añadir oportunidad</button></div>
   ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[17,22,6.5,7.5,5,9,6,7,20].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de oportunidad</th><th>Acciones</th><th>V<small>viabilidad</small></th><th>R<small>rentabilidad</small></th><th>V*R</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th></tr></thead>
   ${porProc(l,x=>rp(x[0]),9,fila,x=>abierto(x[0].estado))}
@@ -389,17 +391,16 @@ function procesosTab(){
 }
 
 function objetivos(){
-  const O=objsAno(S.ano);
-  const sel=`<select onchange="S.ano=this.value;render()">${anios().map(a=>`<option ${S.ano===a?'selected':''}>${a}</option>`).join('')}</select>`;
+  const O=D.objs;
   const vacios=O.filter(o=>!o.objetivo).length;
   const def=O.filter(o=>o.objetivo), sinAcc=def.filter(o=>!o.acciones).length, conRes=def.filter(o=>o.t.some(Boolean)).length;
   return `<div class="kpis">
-   <div class="card kpi"><b>${O.length}</b><span>líneas en ${esc(S.ano)}</span></div>
+   <div class="card kpi"><b>${O.length}</b><span>líneas en ${esc(CICLO)}</span></div>
    <div class="card kpi"><b>${def.length}</b><span>objetivos definidos</span></div>
    <div class="card kpi"><b class="${vacios?'warn':''}">${vacios}</b><span>por completar</span></div>
    <div class="card kpi"><b class="${sinAcc?'warn':''}">${sinAcc}</b><span>definidos sin acciones</span></div>
    <div class="card kpi"><b>${conRes}/${def.length}</b><span>con resultado trimestral</span></div></div>
-  <div class="bar">${sel}<button class="btn" style="margin-left:auto" onclick="editar('obj',null,{anio:S.ano})">+ Añadir línea</button></div>
+  <div class="bar"><span class="mut">Objetivos del ciclo ${esc(CICLO)}</span><button class="btn" style="margin-left:auto" onclick="editar('obj',null)">+ Añadir línea</button></div>
   ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[18,25,14,8,7,7,5.25,5.25,5.25,5.25].map(w=>`<col style="width:${w}%">`).join('')}</colgroup>
   <thead><tr><th>Objetivo</th><th>Acciones</th><th>Indicador</th><th>Resp.</th><th>Ref.</th><th>Plazo</th><th>T1</th><th>T2</th><th>T3</th><th>T4</th></tr></thead>
   ${[...new Set(O.map(o=>o.origen))].map(g=>{const l=O.filter(o=>o.origen===g),pend=l.filter(o=>!o.objetivo).length;
@@ -409,7 +410,7 @@ function objetivos(){
      <td>${esc(o.indicador)}</td><td>${esc(o.resp)}</td><td>${esc(o.ref)}</td><td>${esc(fecha(o.plazo))}</td>
      ${o.t.map(v=>`<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody>`}).join('')}
   </table></div>
-  ${O.some(o=>o.res.some(Boolean)||o.seg)?`<div class="card pad mt"><h2>Seguimiento de ${esc(S.ano)} (observaciones)</h2>${O.filter(o=>o.res.some(Boolean)||o.seg).map(o=>`<details open><summary><b>${esc(o.objetivo)}</b></summary><div class="body">${o.res.map((r,i)=>r?`<p><span class="tag">T${i+1}</span> ${esc(r)}</p>`:'').join('')}${o.seg?`<p><b>Conclusión:</b> ${esc(o.seg)}</p>`:''}</div></details>`).join('')}</div>`:''}`;
+  ${O.some(o=>o.res.some(Boolean)||o.seg)?`<div class="card pad mt"><h2>Seguimiento de ${esc(CICLO)} (observaciones)</h2>${O.filter(o=>o.res.some(Boolean)||o.seg).map(o=>`<details open><summary><b>${esc(o.objetivo)}</b></summary><div class="body">${o.res.map((r,i)=>r?`<p><span class="tag">T${i+1}</span> ${esc(r)}</p>`:'').join('')}${o.seg?`<p><b>Conclusión:</b> ${esc(o.seg)}</p>`:''}</div></details>`).join('')}</div>`:''}`;
 }
 
 // ================= Revisión por la Dirección: textos, imágenes y Word =================
@@ -420,7 +421,7 @@ function revSecs(){
   const cnt=t=>D.factors.filter(f=>f.tipo===t).length;
   const ab=D.risks.filter(r=>abierto(r.estado)), cer=D.risks.filter(r=>r.estado==='Cerrada');
   const oab=D.opps.filter(o=>abierto(o.estado)&&tieneAcc(o)), ocer=D.opps.filter(o=>o.estado==='Cerrada');
-  const O=objsAno(REV.anio).filter(o=>o.objetivo);
+  const O=D.objs.filter(o=>o.objetivo);
   const porProc=Object.entries(D.factors.reduce((a,f)=>(a[proc(f.proceso)]=(a[proc(f.proceso)]||0)+1,a),{})).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`${p} (${n})`).join(', ');
   const P=(s)=>({t:'p',s}), L=(s)=>({t:'li',s}), T=(head,rows)=>({t:'table',head,rows});
   const man=(k,t,nota,grupo)=>({k,t,auto:false,nota:nota||'',lines:[],grupo});
@@ -544,7 +545,6 @@ async function generarWord(){
   a.download=`Revision por la Direccion ${REV.anio}.docx`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
 }
 function revTexto(k,v){const row={id:REV.anio+':'+k,anio:REV.anio,key:k,texto:v};REV.texto[row.id]=v;guardar('rev_texto',row);const y=window.scrollY;render();window.scrollTo(0,y)}
-function revAnio(v){REV.anio=(v.trim().match(/^\d{4}$/)||[String(new Date().getFullYear()-1)])[0];D.meta.revAnio=REV.anio;guardar('meta',D.meta);render()}
 function revImg(k,files){
   const ps=[...files].map(f=>new Promise(ok=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
     const sc=Math.min(1,1400/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
@@ -566,9 +566,9 @@ function revision(){
    <div class="card kpi"><b>${hechos}/${man.length}</b><span>manuales cumplimentados</span></div>
    <div class="card kpi"><b class="${pend?'warn':''}">${pend}</b><span>manuales sin cumplimentar</span></div>
    <div class="card kpi"><b>${nImg}</b><span>imágenes adjuntas</span></div></div>
-  <div class="bar"><b>Año de la revisión</b><input style="width:80px" value="${esc(REV.anio)}" onchange="revAnio(this.value)">
+  <div class="bar"><b>Revisión por la Dirección ${esc(CICLO)}</b>
     <span class="mut" id="revcnt">${revResumen()}</span>
-    <button class="btn" style="margin-left:auto;background:var(--primary);color:var(--bg);border-color:var(--primary);font-weight:600" onclick="generarWord()">⬇ Generar Word (formato Winoa)</button></div>
+    <button class="btn keep" style="margin-left:auto;background:var(--primary);color:var(--bg);border-color:var(--primary);font-weight:600" onclick="generarWord()">⬇ Generar Word (formato Winoa)</button></div>
   <p class="mut" style="margin-top:0">Estructura del índice de la <b>Revisión por la Dirección</b>. Los apartados <span class="pill g">auto</span> se rellenan con los datos del sistema; en todos puedes añadir texto e imágenes. El botón genera el .docx completo con cabecera Winoa, índice, numeración y pie de página.</p>
   <div class="card">${secs.map(s=>{const imgs=revI(s.k);return `<details ${(!revVacia(s)||s.auto&&false)?'open':''}><summary><span class="pill ${s.auto?'g':'n'}">${s.auto?'auto':'manual'}</span><b>${esc(s.t)}</b>${revVacia(s)&&!s.auto?'<span class="mut">· sin cumplimentar</span>':''}</summary><div class="body">
     ${s.auto?revLinesHtml(s.lines):(s.nota?`<p class="mut">${esc(s.nota)}</p>`:'')}
@@ -607,6 +607,7 @@ function coherencia(){
 const VIEWS={general,externo,interno,flujo,criterios,dafo,partes,riesgos,oport,procesos:procesosTab,objetivos,revision,coherencia};
 // ================= API, avisos y formularios de edición =================
 async function api(method,url,body){
+  if(CICLO&&/^api\/(factors|parties|risks|opps|objetivos|meta|rev_texto)\//.test(url))url+=(url.includes('?')?'&':'?')+'c='+CICLO;
   const r=await fetch(url,{method,headers:body!==undefined?{'Content-Type':'application/json'}:{},body:body!==undefined?JSON.stringify(body):undefined});
   if(!r.ok){let m='';try{m=(await r.json()).error}catch(e){}throw new Error(m||('HTTP '+r.status))}
   return r.json();
@@ -634,10 +635,10 @@ const KIND={
     campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST],['just','Justificación (V×R = 9 sin acción)','area']],
     req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&tieneAcc(o)&&(!o.V||!o.R))?'Si la oportunidad tiene acción, valora su viabilidad (V) y rentabilidad (R)':''),
     post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
-  obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:S.ano||String(new Date().getFullYear()),origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
-    campos:[['anio','Año','text'],['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
+  obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:CICLO,origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
+    campos:[['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
       ['t0','Resultado T1','text'],['t1','Resultado T2','text'],['t2','Resultado T3','text'],['t3','Resultado T4','text'],['res0','Observación T1','area'],['res1','Observación T2','area'],['res2','Observación T3','area'],['res3','Observación T4','area'],['seg','Conclusión del seguimiento','area']],
-    req:o=>/^\d{4}$/.test(o.anio)?'':'El año debe tener 4 cifras'},
+    req:()=>''},
   meta:{col:'meta',list:()=>[D.meta],titulo:'Datos generales',pref:'M',nuevo:()=>({}),
     campos:[['fecha','Fecha de elaboración','date'],['participantes','Participantes (uno por línea)','lines']],req:()=>''},
   // --- locales: trabajan sobre el borrador de factores (Externo / Interno), no tocan el servidor
@@ -678,6 +679,7 @@ const getV=(o,n)=>{const m=/^(t|res)(\d)$/.exec(n);return m?(o[m[1]]||[])[+m[2]]
 const setV=(o,n,v)=>{const m=/^(t|res)(\d)$/.exec(n);if(m){o[m[1]]=o[m[1]]||['','','',''];o[m[1]][+m[2]]=v}else o[n]=v};
 function autoGrow(){document.querySelectorAll('#modal textarea').forEach(t=>{const f=()=>{t.style.height='auto';t.style.height=(t.scrollHeight+2)+'px'};t.style.overflow='hidden';t.style.resize='none';f();t.addEventListener('input',f)})}
 function editar(kind,id,pre){
+  if(RO){toast(`El ciclo ${CICLO} está cerrado: solo lectura`,true);return}
   const K=KIND[kind];pre=pre||{};
   let base;
   if(K.local)base=Object.assign({},pre);
@@ -748,7 +750,6 @@ async function aceptar(){
   try{await api('PUT',`api/${K.col}/${encodeURIComponent(o.id)}`,o);for(const f of sib)await api('PUT',`api/factors/${encodeURIComponent(f.id)}`,f)}catch(e){document.getElementById('merr').textContent='NO SE HA GUARDADO: '+e.message;return}
   if(M.kind==='meta')Object.assign(D.meta,o);
   else{const L=K.list();const i=L.findIndex(x=>x.id===o.id);if(i>=0)L[i]=o;else L.push(o);sib.forEach(f=>{const k=D.factors.findIndex(x=>x.id===f.id);if(k>=0)D.factors[k]=f})}
-  if(M.kind==='obj')S.ano=o.anio;
   reindex();cerrar();toast('Guardado');render();
 }
 async function borrar(){
@@ -761,19 +762,75 @@ async function borrar(){
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&M)cerrar()});
 
 // ================= Arranque =================
-async function boot(){
+async function boot(c){
   try{
-    const d=await api('GET','api/data');
+    const d=await api('GET','api/data'+(c?'?c='+c:''));
+    CICLOS=d.ciclos||[];
+    if(!d.ciclo){document.getElementById('view').innerHTML='<div class="banner">No hay ningún ciclo en la base de datos.</div>';return}
+    CICLO=d.ciclo.anio;RO=d.ciclo.estado==='cerrado';
     D.meta=d.meta[0]||{id:'main',fecha:'',participantes:[]};
     D.factors=d.factors;D.parties=d.parties;D.risks=d.risks.map(normAcc);D.opps=d.opps.map(normAcc);D.risks.forEach(recalc);D.opps.forEach(recalc);
     D.objs=d.objetivos.map(o=>({t:['','','',''],res:['','','',''],...o}));
-    REV.texto=Object.fromEntries(d.rev_texto.map(r=>[r.id,r.texto]));REV.imgs=d.imgs;
-    const y=(D.meta.fecha||'').slice(0,4);
-    REV.anio=D.meta.revAnio||(y?String(+y):String(new Date().getFullYear()-1));
-    S.ano=anios()[0]||String(new Date().getFullYear());
+    REV.texto=Object.fromEntries(d.rev_texto.map(r=>[r.id,r.texto]));REV.imgs=d.imgs;REV.anio=CICLO;
+    FD=null;FE={externo:[],interno:[]};
     reindex();
     const n=await asegurarFilas();if(n)toast(`Se han añadido ${n} fila(s) a Riesgos/Oportunidades para los factores del DAFO`);
     render();
   }catch(e){document.getElementById('view').innerHTML=`<div class="banner">No se pudieron cargar los datos: ${esc(e.message)}</div>`}
+}
+// ---- ciclos anuales
+function pintarCiclo(){
+  const sel=document.getElementById('ciclosel'),b=document.getElementById('cicloBadge');if(!sel)return;
+  sel.innerHTML=CICLOS.map(c=>`<option value="${c.anio}" ${c.anio===CICLO?'selected':''}>Ciclo ${c.anio} · ${c.estado==='cerrado'?'cerrado':'abierto'}</option>`).join('');
+  b.className='badge '+(RO?'cerrado':'abierto');b.textContent=RO?'Solo lectura':'Abierto';
+  if(RO){const c=CICLOS.find(x=>x.anio===CICLO);
+    document.getElementById('view').insertAdjacentHTML('afterbegin',`<div class="robanner">🔒 <b>Ciclo ${esc(CICLO)} cerrado</b>${c&&c.cerrado?` el ${esc(c.cerrado.slice(0,10).split('-').reverse().join('/'))}`:''}. Solo lectura: es la evidencia del año. Puedes consultarlo y generar el Word de la revisión.</div>`)}
+}
+function cambiarCiclo(c){
+  if(c===CICLO)return;
+  if(fdDirty()){document.getElementById('ciclosel').value=CICLO;fdDialog(()=>boot(c));return}
+  S.estado='abiertos';S.proceso='';boot(c);
+}
+function cicloCard(){
+  const c=CICLOS.find(x=>x.anio===CICLO)||{},sig=CICLOS.find(x=>+x.anio>+CICLO),n=String(+CICLO+1);
+  return `<div class="card pad mt" style="max-width:760px"><h2>Ciclo ${esc(CICLO)} <span class="badge ${RO?'cerrado':'abierto'}">${RO?'cerrado':'abierto'}</span></h2>
+   <p class="mut" style="margin-top:0">Cada año es un ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos y revisión). Al cerrarlo queda como evidencia, en solo lectura.</p>
+   ${RO?`<p>Cerrado el ${esc((c.cerrado||'').slice(0,10).split('-').reverse().join('/'))}. ${sig?`Ya existe el ciclo ${esc(sig.anio)}.`:''}</p>
+     ${sig?`<button class="btn keep" onclick="cambiarCiclo('${sig.anio}')">Ir al ciclo ${esc(sig.anio)}</button>`:`<button class="btn pri keep" onclick="dialogCrearCiclo()">Crear ciclo ${n} a partir de este</button>`}`
+    :`<button class="btn pri keep" onclick="dialogCerrarCiclo()">Cerrar ciclo ${esc(CICLO)}…</button>`}
+  </div>`;
+}
+function dialogCerrarCiclo(){
+  const sinEv=D.factors.filter(f=>!evaluado(f)).length, sinVal=D.risks.filter(r=>!r.P||!r.G).length;
+  const sinAcc=D.risks.filter(r=>requiere(r)&&!tieneAcc(r)&&!r.just).length+D.opps.filter(o=>requiereO(o)&&!tieneAcc(o)&&!o.just).length;
+  const obj=D.objs.filter(o=>!o.objetivo).length, rev=revSecs().filter(x=>!x.auto&&revVacia(x)).length;
+  const li=(n,t)=>`<li class="${n?'warn':''}"><b>${n}</b> ${t}</li>`;
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Cerrar el ciclo ${esc(CICLO)}</h2>
+   <p>Al cerrarlo, todo el ciclo (DAFO, partes, riesgos, oportunidades, objetivos y revisión) pasa a <b>solo lectura</b>. <b>No se puede reabrir desde la aplicación</b>; solo se puede reabrir desde el servidor.</p>
+   <p class="mut" style="margin-bottom:4px">Estado actual (son avisos, no impiden cerrar):</p>
+   <ul>${li(sinEv,'factores sin evaluar')}${li(sinVal,'riesgos sin valorar (P o G vacíos)')}${li(sinAcc,'elementos que exigen acción y no la tienen')}${li(obj,'líneas de objetivos por completar')}${li(rev,'apartados manuales de la revisión sin cumplimentar')}</ul>
+   <div class="merr" id="merr"></div>
+   <div class="mbtn"><span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn danger" onclick="cerrarCiclo()">Cerrar ciclo ${esc(CICLO)}</button></div></div></div>`;
+}
+async function cerrarCiclo(){
+  try{await api('POST',`api/ciclos/${CICLO}/cerrar`,{});cerrar();toast(`Ciclo ${CICLO} cerrado`);await boot(CICLO)}
+  catch(e){document.getElementById('merr').textContent='No se pudo cerrar: '+e.message}
+}
+function dialogCrearCiclo(){
+  const n=String(+CICLO+1);
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Crear el ciclo ${esc(n)}</h2>
+   <p>Se crea a partir del ciclo ${esc(CICLO)}, que no se modifica:</p>
+   <ul><li><b>Partes interesadas y factores del DAFO:</b> se copian tal cual, para que los revises.</li>
+   <li><b>Riesgos y oportunidades:</b> se copian <u>sin valorar</u> (P×G y V×R se vuelven a valorar); la valoración anterior queda como referencia.</li>
+   <li><b>Acciones:</b> las que siguen abiertas continúan; las cerradas se quedan en ${esc(CICLO)}.</li>
+   <li><b>Objetivos:</b> nuevos, con el origen, el indicador y el resultado anterior como referencia (si ya había objetivos preparados para ${esc(n)}, se respetan).</li>
+   <li><b>Revisión por la dirección:</b> documento nuevo y vacío.</li></ul>
+   <div class="merr" id="merr"></div>
+   <div class="mbtn"><span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="crearCicloSig()">Crear ciclo ${esc(n)}</button></div></div></div>`;
+}
+async function crearCicloSig(){
+  const n=String(+CICLO+1);
+  try{await api('POST','api/ciclos',{desde:CICLO,anio:n});cerrar();toast(`Ciclo ${n} creado`);S.estado='abiertos';await boot(n)}
+  catch(e){document.getElementById('merr').textContent='No se pudo crear: '+e.message}
 }
 boot();
