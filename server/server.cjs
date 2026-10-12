@@ -1,233 +1,171 @@
-// SGI · DAFO y riesgos (ISO 9001 / 14001 / 45001 / 50001). API mínima sobre SQLite.
-// Un solo proceso: sirve la API (/api/*) y el front compilado (dist/). Sin dependencias externas salvo better-sqlite3.
-// Configuración por entorno: PORT, HOST, DATA_DIR, DIST_DIR. No hay autenticación propia: se delega en lo que
-// haya delante (Cloudflare Access hoy, la app anfitriona después).
+// SGI · Contexto y planificación del SGI (Winoa Ibérica). API mínima sobre SQLite + front estático (public/).
+// Un solo proceso, una dependencia (better-sqlite3). Sin autenticación propia: la delega en lo que haya delante
+// (Cloudflare Access hoy, la app anfitriona —VISTA— después).
+// Configuración por entorno: PORT (8096), HOST (127.0.0.1), DATA_DIR (./data), PUBLIC_DIR (./public).
+// Portabilidad: todos los datos están en DATA_DIR/sgi.db (un fichero) y se pueden volcar/cargar con /api/export e /api/import.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const Database = require('better-sqlite3');
 
 const PORT = +process.env.PORT || 8096;
 const HOST = process.env.HOST || '127.0.0.1';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
-const DIST_DIR = process.env.DIST_DIR || path.join(__dirname, '..', 'dist');
-const MAX_JSON = 5 * 1024 * 1024;
-const ID = /^[A-Za-z0-9_-]{1,64}$/;
+const PUBLIC_DIR = process.env.PUBLIC_DIR || path.join(__dirname, '..', 'public');
+const MAX_JSON = 25 * 1024 * 1024; // incluye /api/import con imágenes
+const MAX_IMG = 12 * 1024 * 1024;
+const ID = /^[A-Za-z0-9_.:-]{1,64}$/;
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 const db = new Database(path.join(DATA_DIR, 'sgi.db'));
 db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
 db.exec(`
-  CREATE TABLE IF NOT EXISTS revisions (
-    id TEXT PRIMARY KEY, titulo TEXT NOT NULL, fecha TEXT NOT NULL,
-    estado TEXT NOT NULL DEFAULT 'borrador', notas TEXT NOT NULL DEFAULT ''
+  CREATE TABLE IF NOT EXISTS items (
+    col TEXT NOT NULL, id TEXT NOT NULL, data TEXT NOT NULL, updated_at TEXT NOT NULL,
+    n INTEGER PRIMARY KEY AUTOINCREMENT, UNIQUE(col, id)
   );
-  CREATE TABLE IF NOT EXISTS factors (
-    id TEXT PRIMARY KEY, revision_id TEXT NOT NULL REFERENCES revisions(id) ON DELETE CASCADE,
-    tipo TEXT NOT NULL, texto TEXT NOT NULL, categoria TEXT NOT NULL DEFAULT '',
-    normas TEXT NOT NULL DEFAULT '[]', impacto INTEGER NOT NULL DEFAULT 3, orden INTEGER NOT NULL DEFAULT 0
-  );
-  CREATE TABLE IF NOT EXISTS parties (
-    id TEXT PRIMARY KEY, nombre TEXT NOT NULL, tipo TEXT NOT NULL DEFAULT 'externa',
-    necesidades TEXT NOT NULL DEFAULT '', requisito INTEGER NOT NULL DEFAULT 0,
-    normas TEXT NOT NULL DEFAULT '[]', seguimiento TEXT NOT NULL DEFAULT ''
-  );
-  CREATE TABLE IF NOT EXISTS risks (
-    id TEXT PRIMARY KEY, tipo TEXT NOT NULL DEFAULT 'riesgo', factor_id TEXT REFERENCES factors(id) ON DELETE SET NULL,
-    descripcion TEXT NOT NULL, normas TEXT NOT NULL DEFAULT '[]',
-    probabilidad INTEGER NOT NULL DEFAULT 3, impacto INTEGER NOT NULL DEFAULT 3,
-    accion TEXT NOT NULL DEFAULT '', responsable TEXT NOT NULL DEFAULT '', limite TEXT NOT NULL DEFAULT '',
-    estado TEXT NOT NULL DEFAULT 'identificado', eficacia TEXT NOT NULL DEFAULT ''
+  CREATE TABLE IF NOT EXISTS imgs (
+    id TEXT PRIMARY KEY, anio TEXT NOT NULL, key TEXT NOT NULL, nombre TEXT NOT NULL DEFAULT '',
+    w INTEGER NOT NULL, h INTEGER NOT NULL, png BLOB NOT NULL, updated_at TEXT NOT NULL,
+    n INTEGER NOT NULL DEFAULT 0
   );
 `);
 
-// Definición de colecciones: columnas editables (en orden) y cuáles viajan como JSON.
-const COLS = {
-  revisions: { cols: ['titulo', 'fecha', 'estado', 'notas'], json: [], order: 'fecha DESC, rowid DESC' },
-  factors: { cols: ['revision_id', 'tipo', 'texto', 'categoria', 'normas', 'impacto', 'orden'], json: ['normas'], order: 'orden, rowid' },
-  parties: { cols: ['nombre', 'tipo', 'necesidades', 'requisito', 'normas', 'seguimiento'], json: ['normas'], order: 'nombre' },
-  risks: {
-    cols: ['tipo', 'factor_id', 'descripcion', 'normas', 'probabilidad', 'impacto', 'accion', 'responsable', 'limite', 'estado', 'eficacia'],
-    json: ['normas'],
-    order: 'rowid',
-  },
-};
-const TIPOS = {
-  factors: { tipo: ['D', 'A', 'F', 'O'] },
-  parties: { tipo: ['interna', 'externa'] },
-  revisions: { estado: ['borrador', 'vigente', 'archivada'] },
-  risks: { tipo: ['riesgo', 'oportunidad'], estado: ['identificado', 'en curso', 'cerrado'] },
-};
-const NORMAS = ['9001', '14001', '45001', '50001'];
+// Colecciones permitidas: meta (ficha del análisis), factors (DAFO), parties, risks, opps, objetivos y rev_texto (textos de la revisión).
+const COLS = new Set(['meta', 'factors', 'parties', 'risks', 'opps', 'objetivos', 'rev_texto']);
+const ESTADOS = ['', 'En curso', 'Cerrada'];
+const TIPO_FACTOR = ['D', 'A', 'F', 'O'];
+const esc13 = v => v === null || v === undefined || v === '' || [1, 2, 3].includes(+v);
 
-const stmts = {};
-for (const [nombre, def] of Object.entries(COLS)) {
-  const names = def.cols;
-  stmts[nombre] = {
-    all: db.prepare(`SELECT id, ${names.join(', ')} FROM ${nombre} ORDER BY ${def.order}`),
-    upsert: db.prepare(
-      `INSERT INTO ${nombre} (id, ${names.join(', ')}) VALUES (@id, ${names.map((c) => '@' + c).join(', ')})
-       ON CONFLICT(id) DO UPDATE SET ${names.map((c) => `${c} = @${c}`).join(', ')}`,
-    ),
-    del: db.prepare(`DELETE FROM ${nombre} WHERE id = ?`),
-  };
-}
-
-const malo = (msg, code = 400) => Object.assign(new Error(msg), { code });
-
-function fila(nombre, row) {
-  const out = { ...row };
-  for (const c of COLS[nombre].json) out[c] = JSON.parse(row[c] || '[]');
-  return out;
-}
-
-function limpiar(nombre, id, body) {
-  const def = COLS[nombre];
-  const out = { id };
-  for (const c of def.cols) {
-    let v = body[c];
-    if (def.json.includes(c)) {
-      if (!Array.isArray(v)) v = [];
-      if (v.some((n) => !NORMAS.includes(n))) throw malo(`Norma no válida en ${c}`);
-      v = JSON.stringify(v);
-    } else if (['impacto', 'probabilidad', 'orden', 'requisito'].includes(c)) {
-      v = Math.round(Number(v ?? (c === 'orden' || c === 'requisito' ? 0 : 3)));
-      if (!Number.isFinite(v)) throw malo(`${c} no es un número`);
-      if (c === 'requisito') v = v ? 1 : 0;
-      if (c === 'impacto' || c === 'probabilidad') v = Math.min(5, Math.max(1, v));
-    } else {
-      v = v == null ? '' : String(v);
-      if (v.length > 5000) throw malo(`${c} demasiado largo`);
-    }
-    out[c] = v;
+function check(col, d) {
+  if (typeof d !== 'object' || d === null || Array.isArray(d)) return 'cuerpo no válido';
+  if (col === 'risks' || col === 'opps') {
+    if (d.estado !== undefined && !ESTADOS.includes(d.estado)) return 'estado no válido';
+    for (const k of col === 'risks' ? ['P', 'G', 'Pr', 'Gr'] : ['V', 'R']) if (!esc13(d[k])) return `${k} debe ser 1, 2 o 3`;
   }
-  for (const [c, ok] of Object.entries(TIPOS[nombre] || {})) {
-    if (out[c] === '') out[c] = ok[0]; // sin valor → el primero (riesgo, identificado, borrador…)
-    if (!ok.includes(out[c])) throw malo(`${c} no válido`);
-  }
-  for (const req of ['titulo', 'texto', 'nombre', 'descripcion']) if (req in out && !out[req].trim()) throw malo(`${req} obligatorio`);
-  if (nombre === 'risks' && out.factor_id === '') out.factor_id = null;
-  return out;
+  if (col === 'factors' && !TIPO_FACTOR.includes(d.tipo)) return 'tipo de factor no válido';
+  if (col === 'parties' && !['externa', 'interna'].includes(d.tipo)) return 'tipo de parte no válido';
+  return null;
 }
 
-function todo() {
+const now = () => new Date().toISOString();
+const upsert = db.prepare(`INSERT INTO items (col, id, data, updated_at) VALUES (?,?,?,?)
+  ON CONFLICT(col, id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at`);
+const del = db.prepare('DELETE FROM items WHERE col = ? AND id = ?');
+const listAll = db.prepare('SELECT col, id, data FROM items ORDER BY n');
+
+function snapshot() {
   const out = {};
-  for (const nombre of Object.keys(COLS)) out[nombre] = stmts[nombre].all.all().map((r) => fila(nombre, r));
+  for (const c of COLS) out[c] = [];
+  for (const r of listAll.all()) if (out[r.col]) out[r.col].push({ ...JSON.parse(r.data), id: r.id });
+  out.imgs = db.prepare('SELECT id, anio, key, nombre, w, h FROM imgs ORDER BY n, rowid').all();
   return out;
 }
 
-async function leerJson(req) {
-  const chunks = [];
-  let n = 0;
-  for await (const c of req) {
-    n += c.length;
-    if (n > MAX_JSON) throw malo('Cuerpo demasiado grande', 413);
-    chunks.push(c);
-  }
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
-  } catch {
-    throw malo('JSON no válido');
-  }
+function send(res, code, body, type = 'application/json; charset=utf-8', extra = {}) {
+  res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', ...extra });
+  res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
-
-const json = (res, code, obj) => {
-  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(obj));
-};
-
-// Copia una revisión de DAFO con todos sus factores (para la revisión anual).
-const duplicar = db.transaction((origen, nuevoId, titulo, fecha, nuevosIds) => {
-  const rev = db.prepare('SELECT * FROM revisions WHERE id = ?').get(origen);
-  if (!rev) throw malo('Revisión no encontrada', 404);
-  stmts.revisions.upsert.run({ id: nuevoId, titulo, fecha, estado: 'borrador', notas: '' });
-  const fs_ = db.prepare('SELECT * FROM factors WHERE revision_id = ? ORDER BY orden, rowid').all(origen);
-  fs_.forEach((f, i) => {
-    const nid = nuevosIds[i];
-    if (!ID.test(nid || '')) throw malo('ids de factores no válidos');
-    stmts.factors.upsert.run({ ...f, id: nid, revision_id: nuevoId });
+function readBody(req, max = MAX_JSON) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let n = 0;
+    req.on('data', c => { n += c.length; if (n > max) { reject(Object.assign(new Error('cuerpo demasiado grande'), { code: 413 })); req.destroy(); } else chunks.push(c); });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
   });
-  return fs_.length;
-});
+}
+const parseJson = buf => { try { return JSON.parse(buf.toString('utf8')); } catch { throw Object.assign(new Error('JSON no válido'), { code: 400 }); } };
 
-const importar = db.transaction((data) => {
-  for (const t of ['risks', 'factors', 'parties', 'revisions']) db.prepare(`DELETE FROM ${t}`).run();
-  for (const nombre of ['revisions', 'factors', 'parties', 'risks']) {
-    for (const r of data[nombre] || []) {
-      if (!ID.test(r.id || '')) throw malo(`id no válido en ${nombre}`);
-      stmts[nombre].upsert.run(limpiar(nombre, r.id, r));
-    }
-  }
-});
-
-async function api(req, res, url) {
-  const [, , recurso, id, accion] = url.pathname.split('/');
-  const m = req.method;
-
-  if (recurso === 'data' && m === 'GET') return json(res, 200, todo());
-  if (recurso === 'export' && m === 'GET') {
-    res.writeHead(200, {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Content-Disposition': `attachment; filename="sgi-dafo-${new Date().toISOString().slice(0, 10)}.json"`,
-    });
-    return res.end(JSON.stringify({ version: 1, ...todo() }, null, 2));
-  }
-  if (recurso === 'import' && m === 'POST') {
-    importar(await leerJson(req));
-    return json(res, 200, { ok: true });
-  }
-  if (recurso === 'revisions' && ID.test(id || '') && accion === 'duplicate' && m === 'POST') {
-    const b = await leerJson(req);
-    if (!ID.test(b.id || '') || !String(b.titulo || '').trim()) throw malo('Faltan id o título');
-    const n = duplicar(id, b.id, String(b.titulo), String(b.fecha || ''), Array.isArray(b.factorIds) ? b.factorIds : []);
-    return json(res, 200, { ok: true, factores: n });
-  }
-  if (COLS[recurso] && ID.test(id || '') && !accion) {
-    if (m === 'PUT') {
-      const fila_ = limpiar(recurso, id, await leerJson(req));
-      try {
-        stmts[recurso].upsert.run(fila_);
-      } catch (e) {
-        if (String(e.message).includes('FOREIGN KEY')) throw malo('Referencia a un elemento que no existe');
-        throw e;
-      }
-      return json(res, 200, { ok: true });
-    }
-    if (m === 'DELETE') {
-      stmts[recurso].del.run(id);
-      return json(res, 200, { ok: true });
-    }
-  }
-  return json(res, 404, { error: 'Ruta no encontrada' });
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.json': 'application/json' };
+function serveStatic(req, res, pathname) {
+  let rel = decodeURIComponent(pathname);
+  if (rel === '/' || rel === '') rel = '/index.html';
+  if (rel === '/favicon.ico') rel = '/winoa-logo.png';
+  const file = path.normalize(path.join(PUBLIC_DIR, rel));
+  if (!file.startsWith(path.normalize(PUBLIC_DIR + path.sep)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return send(res, 404, { error: 'no encontrado' });
+  send(res, 200, fs.readFileSync(file), MIME[path.extname(file).toLowerCase()] || 'application/octet-stream', { 'Cache-Control': 'no-cache' });
 }
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
-  '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json',
-};
-function estatico(req, res, url) {
-  let rel = decodeURIComponent(url.pathname);
-  let file = path.join(DIST_DIR, path.normalize(rel));
-  if (!file.startsWith(DIST_DIR)) return json(res, 403, { error: 'Prohibido' });
-  if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) file = path.join(DIST_DIR, 'index.html');
-  if (!fs.existsSync(file)) return json(res, 404, { error: 'Front sin compilar: ejecuta npm run build' });
-  const ext = path.extname(file);
-  const cache = file.includes(`${path.sep}assets${path.sep}`) ? 'public, max-age=31536000, immutable' : 'no-cache';
-  res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': cache });
-  fs.createReadStream(file).pipe(res);
-}
-
-http
-  .createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
+  try {
     const url = new URL(req.url, 'http://x');
-    try {
-      if (url.pathname.startsWith('/api/')) return await api(req, res, url);
-      if (req.method !== 'GET' && req.method !== 'HEAD') return json(res, 405, { error: 'Método no permitido' });
-      return estatico(req, res, url);
-    } catch (e) {
-      if (!res.headersSent) json(res, e.code === 400 || e.code === 404 || e.code === 413 ? e.code : 500, { error: e.message });
-      if (!e.code) console.error(e);
+    const p = url.pathname;
+    if (!p.startsWith('/api/')) {
+      if (req.method !== 'GET' && req.method !== 'HEAD') return send(res, 405, { error: 'método no permitido' });
+      return serveStatic(req, res, p);
     }
-  })
-  .listen(PORT, HOST, () => console.log(`SGI DAFO en http://${HOST}:${PORT}`));
+    const seg = p.split('/').filter(Boolean).slice(1); // tras "api"
+    const m = req.method;
+
+    if (m === 'GET' && seg[0] === 'health') return send(res, 200, { ok: true });
+    if (m === 'GET' && seg[0] === 'data') return send(res, 200, snapshot());
+
+    // Imágenes de la Revisión por la Dirección
+    if (seg[0] === 'img') {
+      if (m === 'POST' && seg.length === 1) {
+        const anio = url.searchParams.get('anio') || '', key = url.searchParams.get('key') || '';
+        const w = +url.searchParams.get('w'), h = +url.searchParams.get('h');
+        if (!/^\d{4}$/.test(anio) || !ID.test(key) || !(w > 0) || !(h > 0)) return send(res, 400, { error: 'parámetros no válidos' });
+        const png = await readBody(req, MAX_IMG);
+        if (png.length < 8 || png.readUInt32BE(0) !== 0x89504e47) return send(res, 400, { error: 'se espera un PNG' });
+        const id = crypto.randomBytes(8).toString('hex');
+        const nombre = (url.searchParams.get('nombre') || '').slice(0, 200);
+        const n = (db.prepare('SELECT COALESCE(MAX(n),0)+1 AS n FROM imgs').get().n);
+        db.prepare('INSERT INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)').run(id, anio, key, nombre, w, h, png, now(), n);
+        return send(res, 201, { id, anio, key, nombre, w, h });
+      }
+      if (seg.length === 2 && ID.test(seg[1])) {
+        if (m === 'GET') {
+          const r = db.prepare('SELECT png FROM imgs WHERE id = ?').get(seg[1]);
+          return r ? send(res, 200, r.png, 'image/png', { 'Cache-Control': 'private, max-age=86400' }) : send(res, 404, { error: 'no existe' });
+        }
+        if (m === 'DELETE') { db.prepare('DELETE FROM imgs WHERE id = ?').run(seg[1]); return send(res, 200, { ok: true }); }
+      }
+      return send(res, 404, { error: 'no encontrado' });
+    }
+
+    // Copia completa (portable) y restauración
+    if (m === 'GET' && seg[0] === 'export') {
+      const snap = snapshot();
+      snap.imgs = db.prepare('SELECT id, anio, key, nombre, w, h, png FROM imgs ORDER BY n, rowid').all().map(r => ({ ...r, png: r.png.toString('base64') }));
+      snap.exportado = now();
+      return send(res, 200, snap, 'application/json; charset=utf-8', { 'Content-Disposition': 'attachment; filename="sgi-dafo-export.json"' });
+    }
+    if (m === 'POST' && seg[0] === 'import') {
+      const d = parseJson(await readBody(req));
+      for (const c of COLS) for (const it of d[c] || []) {
+        if (!it || !ID.test(String(it.id || ''))) return send(res, 400, { error: `id no válido en ${c}` });
+        const e = check(c, it); if (e) return send(res, 400, { error: `${c}/${it.id}: ${e}` });
+      }
+      db.transaction(() => {
+        db.exec('DELETE FROM items; DELETE FROM imgs;');
+        for (const c of COLS) for (const it of d[c] || []) { const { id, ...rest } = it; upsert.run(c, String(id), JSON.stringify(rest), now()); }
+        let n = 0;
+        for (const im of d.imgs || []) db.prepare('INSERT INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)')
+          .run(String(im.id), String(im.anio), String(im.key), String(im.nombre || ''), +im.w, +im.h, Buffer.from(im.png, 'base64'), now(), ++n);
+      })();
+      return send(res, 200, { ok: true });
+    }
+
+    // CRUD genérico: PUT /api/:col/:id (idempotente) y DELETE /api/:col/:id
+    if (seg.length === 2 && COLS.has(seg[0]) && ID.test(seg[1])) {
+      const [col, id] = seg;
+      if (m === 'PUT') {
+        const d = parseJson(await readBody(req));
+        const e = check(col, d); if (e) return send(res, 400, { error: e });
+        const { id: _drop, ...rest } = d;
+        upsert.run(col, id, JSON.stringify(rest), now());
+        return send(res, 200, { ...rest, id });
+      }
+      if (m === 'DELETE') { del.run(col, id); return send(res, 200, { ok: true }); }
+    }
+    send(res, 404, { error: 'no encontrado' });
+  } catch (e) {
+    send(res, e.code === 413 ? 413 : e.code === 400 ? 400 : 500, { error: e.message });
+  }
+});
+
+server.listen(PORT, HOST, () => console.log(`SGI escuchando en http://${HOST}:${PORT} · datos en ${DATA_DIR}`));
+process.on('SIGTERM', () => { server.close(); db.close(); process.exit(0); });

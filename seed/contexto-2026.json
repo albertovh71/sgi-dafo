@@ -1,0 +1,2416 @@
+{
+ "meta": [
+  {
+   "id": "main",
+   "fecha": "2025-02-03",
+   "participantes": [
+    "Alfredo Santos",
+    "Arkaitz García",
+    "Adrian Cabrera",
+    "Alberto Vidaurrazaga",
+    "Carlos Urbasos",
+    "Eneko Ruiz",
+    "Mario Díez",
+    "Marisa Vaamonde"
+   ]
+  }
+ ],
+ "factors": [
+  {
+   "id": "D1",
+   "tipo": "D",
+   "texto": "Proceso productivo difícilmente adaptable para desarrollar otros productos, muy especializados",
+   "cat": "Capacidad tecnológica",
+   "proceso": "PS03"
+  },
+  {
+   "id": "D2",
+   "tipo": "D",
+   "texto": "Problemas de funcionamiento y consumo en la instalación eléctrica de fusión",
+   "cat": "Capacidad tecnológica",
+   "proceso": "PS03"
+  },
+  {
+   "id": "D3",
+   "tipo": "D",
+   "texto": "Precio de la energía eléctrica",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG01"
+  },
+  {
+   "id": "D4",
+   "tipo": "D",
+   "texto": "Costes elevados de mano de obra",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D5",
+   "tipo": "D",
+   "texto": "Limitación de espacio interno de almacenamiento",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS05"
+  },
+  {
+   "id": "D6",
+   "tipo": "D",
+   "texto": "Falta de Evaluación de desempeño anual (Comunicación con la persona supervisora, necesidades formativas...)",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D7",
+   "tipo": "D",
+   "texto": "Aumento de la tasa de absentismo",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D8",
+   "tipo": "D",
+   "texto": "Riesgo de personas con limitaciones médicas en la plantilla",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG06"
+  },
+  {
+   "id": "D9",
+   "tipo": "D",
+   "texto": "Edad media elevada",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D10",
+   "tipo": "D",
+   "texto": "Negociación Convenio 2025",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D11",
+   "tipo": "D",
+   "texto": "No recepción de CV de perfiles femeninos",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D12",
+   "tipo": "D",
+   "texto": "Movilidad funcional limitada por convenio",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "D13",
+   "tipo": "D",
+   "texto": "Recurso de Viviendas de Vizcaya",
+   "cat": "Capacidad financiera",
+   "proceso": "PG01"
+  },
+  {
+   "id": "D14",
+   "tipo": "D",
+   "texto": "Embalaje en plástico no reciclado",
+   "cat": "Cambio climático",
+   "proceso": "PS02"
+  },
+  {
+   "id": "D15",
+   "tipo": "D",
+   "texto": "Parada de producción por avería no prevista en equipo crítico",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D16",
+   "tipo": "D",
+   "texto": "Pérdida de trazabilidad metrológica por calibración fuera de plazo",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D17",
+   "tipo": "D",
+   "texto": "Incumplimiento de requisitos legales: sanciones, paralización de instalaciones",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D18",
+   "tipo": "D",
+   "texto": "Caducidad de inspecciones reglamentarias (OCA) no detectada",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D19",
+   "tipo": "D",
+   "texto": "Accidente laboral derivado de fallo de instalación o intervención de mantenimiento",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D20",
+   "tipo": "D",
+   "texto": "Dependencia de proveedores únicos para repuestos o servicios críticos",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "D21",
+   "tipo": "D",
+   "texto": "Pérdida de conocimiento por relevo de personal técnico",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "A1",
+   "tipo": "A",
+   "texto": "Evolución de la inflación en España respecto a otros países de Europa",
+   "cat": "Económico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A2",
+   "tipo": "A",
+   "texto": "Posibilidad de pérdida de subvenciones energéticas",
+   "cat": "Económico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A3",
+   "tipo": "A",
+   "texto": "Guerra de Ucrania",
+   "cat": "Politico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A4",
+   "tipo": "A",
+   "texto": "Posibles medidas de las reformas laborales previstas (Semana de 36h, flexibilidad de jornada laboral...)",
+   "cat": "Politico",
+   "proceso": "PG03"
+  },
+  {
+   "id": "A5",
+   "tipo": "A",
+   "texto": "Adaptación de la Ley de Familias a la empresa",
+   "cat": "Politico",
+   "proceso": "PG03"
+  },
+  {
+   "id": "A6",
+   "tipo": "A",
+   "texto": "Cambios legales a nivel tributario y laboral",
+   "cat": "Legal",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A7",
+   "tipo": "A",
+   "texto": "Cumplimiento legal en la compra de chatarra y aluminio",
+   "cat": "Legal",
+   "proceso": "PS02"
+  },
+  {
+   "id": "A8",
+   "tipo": "A",
+   "texto": "Nueva ley de embalaje",
+   "cat": "Legal",
+   "proceso": "PG06"
+  },
+  {
+   "id": "A9",
+   "tipo": "A",
+   "texto": "Obligación de utilizar un 50% de plástico reciclado en 2025",
+   "cat": "Legal",
+   "proceso": "PG06"
+  },
+  {
+   "id": "A10",
+   "tipo": "A",
+   "texto": "Inspección medioambiental IPPC: demora en la resolución de incumplimientos",
+   "cat": "Legal",
+   "proceso": "PG06"
+  },
+  {
+   "id": "A11",
+   "tipo": "A",
+   "texto": "Recurso de Viviendas de Vizcaya",
+   "cat": "Legal",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A12",
+   "tipo": "A",
+   "texto": "Obligación de consumir un porcentaje de energía verde",
+   "cat": "Legal",
+   "proceso": "PS02"
+  },
+  {
+   "id": "A13",
+   "tipo": "A",
+   "texto": "Derechos de emisión de CO2",
+   "cat": "Legal",
+   "proceso": "PS02"
+  },
+  {
+   "id": "A14",
+   "tipo": "A",
+   "texto": "Gestión del relevo generacional",
+   "cat": "Social-cultural",
+   "proceso": "PG03"
+  },
+  {
+   "id": "A15",
+   "tipo": "A",
+   "texto": "Necesidad de retener el talento interno",
+   "cat": "Social-cultural",
+   "proceso": "PG03"
+  },
+  {
+   "id": "A16",
+   "tipo": "A",
+   "texto": "Baja tasa de desempleo",
+   "cat": "Social-cultural",
+   "proceso": "PG03"
+  },
+  {
+   "id": "A17",
+   "tipo": "A",
+   "texto": "Vehículo eléctrico, amenaza clientes automoción",
+   "cat": "Tecnologico",
+   "proceso": "PS01"
+  },
+  {
+   "id": "A18",
+   "tipo": "A",
+   "texto": "Proyecto M3",
+   "cat": "Tecnologico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A19",
+   "tipo": "A",
+   "texto": "Gestión informática centralizada en Francia",
+   "cat": "Tecnologico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A20",
+   "tipo": "A",
+   "texto": "Competencia de China",
+   "cat": "Mercado",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A21",
+   "tipo": "A",
+   "texto": "Inestabilidad en la demanda (visibilidad de pedidos a muy corto plazo)",
+   "cat": "Mercado",
+   "proceso": "PG01"
+  },
+  {
+   "id": "A22",
+   "tipo": "A",
+   "texto": "Tendencia a unidades de embalaje más pequeñas",
+   "cat": "Mercado",
+   "proceso": "PS01"
+  },
+  {
+   "id": "A23",
+   "tipo": "A",
+   "texto": "Declive en el mercado del granito",
+   "cat": "Mercado",
+   "proceso": "PS01"
+  },
+  {
+   "id": "A24",
+   "tipo": "A",
+   "texto": "Nueva legislación en cuanto al cambio climático",
+   "cat": "Cambio climático",
+   "proceso": "PG06"
+  },
+  {
+   "id": "A25",
+   "tipo": "A",
+   "texto": "Aumento del calor ambiental",
+   "cat": "Cambio climático",
+   "proceso": "PG06"
+  },
+  {
+   "id": "F1",
+   "tipo": "F",
+   "texto": "Adaptación de instalaciones para producción de Stelux",
+   "cat": "Capacidad tecnológica",
+   "proceso": "PS03"
+  },
+  {
+   "id": "F2",
+   "tipo": "F",
+   "texto": "Proceso de fabricación flexible y adaptable a las condiciones de mercado",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS03"
+  },
+  {
+   "id": "F3",
+   "tipo": "F",
+   "texto": "Planta nueva (sistema de control, alto nivel de automatización)",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG05"
+  },
+  {
+   "id": "F4",
+   "tipo": "F",
+   "texto": "Situación cercana al puerto",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS01"
+  },
+  {
+   "id": "F5",
+   "tipo": "F",
+   "texto": "Productividad muy buena (t/hh)",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS03"
+  },
+  {
+   "id": "F6",
+   "tipo": "F",
+   "texto": "Conocimiento del proceso de granallado",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS01"
+  },
+  {
+   "id": "F7",
+   "tipo": "F",
+   "texto": "Equipo de Ventas (conocimiento, posición, cobertura...)",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS01"
+  },
+  {
+   "id": "F8",
+   "tipo": "F",
+   "texto": "Calidad de producto elevada, sobre todo en Industria (rendimiento, conductividad)",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS03"
+  },
+  {
+   "id": "F9",
+   "tipo": "F",
+   "texto": "Piezas de repuesto (paletas, protecciones) y servicio de mantenimiento",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG01"
+  },
+  {
+   "id": "F10",
+   "tipo": "F",
+   "texto": "Calidad de servicio (flexibilidad, plazos de entrega)",
+   "cat": "Capacidad competitiva",
+   "proceso": "PS01"
+  },
+  {
+   "id": "F11",
+   "tipo": "F",
+   "texto": "Granalum",
+   "cat": "Capacidad competitiva",
+   "proceso": "PG01"
+  },
+  {
+   "id": "F12",
+   "tipo": "F",
+   "texto": "Negociación Convenio 2025",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "F13",
+   "tipo": "F",
+   "texto": "Buena relación con las Autoridades",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG01"
+  },
+  {
+   "id": "F14",
+   "tipo": "F",
+   "texto": "Internalización del Proceso de Nómina",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "F15",
+   "tipo": "F",
+   "texto": "Digitalización de los procesos de las personas trabajadoras, adquisición de competencias digitales",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "F16",
+   "tipo": "F",
+   "texto": "Cultura en seguridad",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG06"
+  },
+  {
+   "id": "F17",
+   "tipo": "F",
+   "texto": "Renovación en equipo directivo",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "F18",
+   "tipo": "F",
+   "texto": "Relevo generacional - contratación de nuevos empleados con nuevos puntos de vistas",
+   "cat": "Capacidad humana/ directiva",
+   "proceso": "PG03"
+  },
+  {
+   "id": "F19",
+   "tipo": "F",
+   "texto": "Situación financiera saneada",
+   "cat": "Capacidad financiera",
+   "proceso": "PG01"
+  },
+  {
+   "id": "F20",
+   "tipo": "F",
+   "texto": "Acceso a las subvenciones de electrointensivos",
+   "cat": "Capacidad financiera",
+   "proceso": "PS02"
+  },
+  {
+   "id": "F21",
+   "tipo": "F",
+   "texto": "Compra de 10% de energía verde",
+   "cat": "",
+   "proceso": "PS02"
+  },
+  {
+   "id": "F22",
+   "tipo": "F",
+   "texto": "Utilización de vehículos de empresa híbridos",
+   "cat": "Cambio climático",
+   "proceso": "PS02"
+  },
+  {
+   "id": "F23",
+   "tipo": "F",
+   "texto": "Obtencion de la calificación SILVER por parte de EcoVadis",
+   "cat": "Cambio climático",
+   "proceso": "PG06"
+  },
+  {
+   "id": "F24",
+   "tipo": "F",
+   "texto": "Bajo consumo de gas con respecto a otras plantas del grupo (pocos hornos de tratamiento de gas)",
+   "cat": "Cambio climático",
+   "proceso": "PS02"
+  },
+  {
+   "id": "F25",
+   "tipo": "F",
+   "texto": "Posibilidad de cumplir de forma anticipada los objetivos de reducción de emisiones de CO2",
+   "cat": "Cambio climático",
+   "proceso": "PS02"
+  },
+  {
+   "id": "O1",
+   "tipo": "O",
+   "texto": "Tasa de crecimiento nacional de las más altas de Europa",
+   "cat": "Económico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O2",
+   "tipo": "O",
+   "texto": "Guerra de Ucrania",
+   "cat": "Politico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O3",
+   "tipo": "O",
+   "texto": "Aumento de la conciencia de sostenibilidad",
+   "cat": "Social-cultural",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O4",
+   "tipo": "O",
+   "texto": "Gestión del relevo generacional",
+   "cat": "Social-cultural",
+   "proceso": "PG03"
+  },
+  {
+   "id": "O5",
+   "tipo": "O",
+   "texto": "Posible incremento de medidas de gestión psicosocial",
+   "cat": "Social-cultural",
+   "proceso": "PG06"
+  },
+  {
+   "id": "O6",
+   "tipo": "O",
+   "texto": "Digitalización de los procesos - menor uso del papel",
+   "cat": "Social-cultural",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O7",
+   "tipo": "O",
+   "texto": "Proyecto M3",
+   "cat": "Tecnologico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O8",
+   "tipo": "O",
+   "texto": "Industria 4.0 (IA)",
+   "cat": "Tecnologico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O9",
+   "tipo": "O",
+   "texto": "Posibilidad de electrificar los hornos de gas",
+   "cat": "Tecnologico",
+   "proceso": "PG01"
+  },
+  {
+   "id": "O10",
+   "tipo": "O",
+   "texto": "Posibilidad de comprar energía mediante PPA",
+   "cat": "Tecnologico",
+   "proceso": "PS02"
+  },
+  {
+   "id": "O11",
+   "tipo": "O",
+   "texto": "Posible mejora en el aislamiento de los hornos HIFI y HT1",
+   "cat": "Tecnologico",
+   "proceso": "PS03"
+  },
+  {
+   "id": "O12",
+   "tipo": "O",
+   "texto": "Mercado distribuido en muchos clientes",
+   "cat": "Mercado",
+   "proceso": "PS01"
+  },
+  {
+   "id": "O13",
+   "tipo": "O",
+   "texto": "Proveedor global",
+   "cat": "Mercado",
+   "proceso": "PS01"
+  }
+ ],
+ "parties": [
+  {
+   "id": "P01",
+   "tipo": "externa",
+   "nombre": "Nueva propiedad (SINTO)",
+   "necesidades": "Rentabilidad y espíritu industrial\nFiabilidad en la información (WINOA), M3 en WIB, Oct25\nGarantía de cumplimiento legal (Compliance, J-Sox)",
+   "expectativas": "Fortalecimiento del negocio, propiedad muy solvente\nReorganizacion general del grupo (Abr25)\nPlantilla comprometida con la empresa\nAutonomia en la gestión local",
+   "requisitos": "Oportunidad de desarrollo en un nuevo grupo mucho más potente, abrasivos clasicos, cut wire (Frohn y TS), repuestos, maquinaria de granallado y fundición, ingeniería\nNuevos clientes de SINTO, que no lo eran de WINOA"
+  },
+  {
+   "id": "P02",
+   "tipo": "externa",
+   "nombre": "WINOA GROUP",
+   "necesidades": "Accidentabilidad baja\nRentabilidad\nContinuidad del negocio\nFiabilidad en la información\nGarantía de cumplimiento legal (Compliance, J-Sox)\nSinergias con el grupo (producción, personas, sistemáticas)\nEstandarizar la gestión\nDesarrollo de nuevas iniciativas en WIB (Spares & Service, Granalum)\nOptimización del consumo energético vs producción\nGestión/reducción de emisiones de CO2\nAutomatización de ciertos procesos y operaciones",
+   "expectativas": "Mejorar la posición del negocio al actuar como grupo\nPlantilla comprometida con la empresa\nRetrasar inversiones (CAPEX) no críticas",
+   "requisitos": "Análisis de gestión por procesos transversales ( supply chain, financiero, calidad, medioambiente, eficiencia energética, prevención, recursos humanos, compras .... )"
+  },
+  {
+   "id": "P03",
+   "tipo": "externa",
+   "nombre": "Clientes",
+   "necesidades": "Servicio global (producto, asistencia técnica, piezas de repuesto en consumibles, maquinaria y retirada del producto usado)\nFiabilidad de suministro y calidad\nOptimización de su proceso productivo (en algunos casos)\nPrecio competitivo\nFinanciación plazos de cobro y consignas (en algunos casos)\nRequisitos ESG por parte de algunos grandes clientes",
+   "expectativas": "Atencion personalizada\nExperiencia satisfactoria\nGestión del residuo de granallado (Granalum)\nVisibilidad en el precio\nResolución ágil de reclamaciones\nAuditorías ESG, participacion en sesiones de formación",
+   "requisitos": "Proceso de gestión de reclamaciones ágil\nLimitar la responsabilidad ante daños en los clientes\nControl continuado de la calidad\nSoporte y servicio en producto y proceso de granallado\nSoporte en mantenimiento de las maquinas de granallado\nSuministro de piezas de repuesto y consumibles"
+  },
+  {
+   "id": "P04",
+   "tipo": "externa",
+   "nombre": "Agentes Distribuidores",
+   "necesidades": "Fiabilidad de suministro y de calidad\nPrecio competitivo\nFinanciación plazos de cobro (en algunos casos)",
+   "expectativas": "Continuidad en la relación\nSinergias\nComunicación honesta y transparente",
+   "requisitos": ""
+  },
+  {
+   "id": "P05",
+   "tipo": "externa",
+   "nombre": "Proveedores en general",
+   "necesidades": "Pagos en plazo\nRequisitos claros",
+   "expectativas": "Continuidad en la relación\nNiveles de precio competitivos\nSinergias\nComunicación honesta y transparente",
+   "requisitos": "Claridad en especificaciones de compra\nEvaluación de proveedores\nNuevos proveedores en algunas familias de compra"
+  },
+  {
+   "id": "P06",
+   "tipo": "externa",
+   "nombre": "ENDESA",
+   "necesidades": "Pagos en plazo\nCumplimiento de las condiciones del contrato (consumos)",
+   "expectativas": "Continuidad en la relación\nNiveles de precio competitivos\nNuevas formas de contratación en el mercado\nSinergias\nComunicación honesta y transparente",
+   "requisitos": "Subcontratado el mantenimiento del depósito de GNL"
+  },
+  {
+   "id": "P07",
+   "tipo": "externa",
+   "nombre": "MIESA",
+   "necesidades": "Pagos en plazo\nVisibilidad anticipada en la necesidad de servicio",
+   "expectativas": "Transparencia en todo lo relacionado con la programación de los equipos\nAsignación de profesionales competentes\nNiveles de precio competitivos\nRapidez de respuesta",
+   "requisitos": "Disposición de contrato anual especificando claramente el servicio incluyendo horas de formación y mantenimiento de EMPRO"
+  },
+  {
+   "id": "P08",
+   "tipo": "externa",
+   "nombre": "Proveedores de chatarra",
+   "necesidades": "Previsión detallada de los consumos semanales y mensuales\nPagos en plazo",
+   "expectativas": "Calidad estable (evitar rechazos)\nFuentes de suministro estables por su parte",
+   "requisitos": "Especificaciones de compra y contratos de tratamiento firmados\nGestión adecuada de la documentación legal aplicable"
+  },
+  {
+   "id": "P09",
+   "tipo": "externa",
+   "nombre": "Contratas",
+   "necesidades": "Pagos en plazo\nRequisitos claros\nVisibilidad en la necesidad del servicio\nCumplimiento de normativa de seguridad",
+   "expectativas": "Continuidad en la relación\nNiveles de precio competitivos\nSinergias\nComunicación honesta y transparente",
+   "requisitos": ""
+  },
+  {
+   "id": "P10",
+   "tipo": "externa",
+   "nombre": "Asociaciones (FVEM, Enkarterri)",
+   "necesidades": "Participación activa\nComunicación fluida",
+   "expectativas": "Continuidad en la relación\nAportaciones económicas",
+   "requisitos": ""
+  },
+  {
+   "id": "P11",
+   "tipo": "externa",
+   "nombre": "Instituciones públicas (EJ-GV, Azpiegitura, Sprilur, Ayuntamiento, ...)",
+   "necesidades": "Cumplimiento legislación vigente\nPago impuestos en plazo\nFiabilidad y transparencia en la comunicación\nSeguimiento del proyecto y de la actividad",
+   "expectativas": "Mantenimiento del empleo segun acuerdo firmado\nEvitar incumplimientos legales en cualquier ambito\nParticipación de la empresa en iniciativas locales y comarcales",
+   "requisitos": ""
+  },
+  {
+   "id": "P12",
+   "tipo": "externa",
+   "nombre": "Población cercana",
+   "necesidades": "Mínimo impacto sobre medio ambiente y salud",
+   "expectativas": "Cumplimiento de la legislación vigente\nCreación de empleo y riqueza en el entorno local\nParticipación de la empresa en iniciativas locales y comarcales",
+   "requisitos": ""
+  },
+  {
+   "id": "P13",
+   "tipo": "externa",
+   "nombre": "REE",
+   "necesidades": "Mantener la caracterización de electrointensivos",
+   "expectativas": "Mantener las ayudas",
+   "requisitos": ""
+  },
+  {
+   "id": "P14",
+   "tipo": "interna",
+   "nombre": "Personas de la organización",
+   "necesidades": "Estabilidad en el empleo\nBuenas condiciones laborales, incluyendo la seguridad y salud laboral\nMedios adecuados para la correcta realización de su trabajo \nCarga de trabajo adecuada\nCompromiso con la seguridad y el medio ambiente",
+   "expectativas": "Oportunidades de conciliar vida laboral y personal (calendarios, horarios)\nReconocimiento y desarrollo profesional\nConvenio/inflación",
+   "requisitos": "Reuniones informativas periódicas con la plantilla"
+  },
+  {
+   "id": "P15",
+   "tipo": "interna",
+   "nombre": "Dirección",
+   "necesidades": "Información clara y veraz\nPlantilla competente\nEquipo unido",
+   "expectativas": "Plantilla comprometida con la empresa\nTransparencia y fiabilidad en la información",
+   "requisitos": "Seleccion de nuevas personas en el equipo de Dirección"
+  }
+ ],
+ "risks": [
+  {
+   "fid": "D2",
+   "causa": "Posible diseño eléctrico de la instalación defectuoso",
+   "efecto": "Pérdida de producción y productividad",
+   "P": 2,
+   "G": 3,
+   "R": 6,
+   "accion": "Disponer de un presupuesto de hornos alternativo\nCambio del sistema de reactancias por parte de ABP",
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Tras varias semanas en funcionamiento y solucionados los problemas iniciales, el nuevo diseño de reactancias es válido y doy por terminada la acción.",
+   "id": "R01",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D6",
+   "causa": "No se ha realizado en los últimos años",
+   "efecto": "Escaso conocimiento del rendimiento del personal",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "Implantación de una Evaluación de desempeño anual  (Comunicación con la persona supervisora, necesidades formativas...)",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Es necesario definir los criterios adecuados de evaluación y el objetivo de la misma",
+   "id": "R02",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D10",
+   "causa": "Finalización convenio actual",
+   "efecto": "Incertidumbre",
+   "P": 3,
+   "G": 2,
+   "R": 6,
+   "accion": "Intentar llegar a un acuerdo lo antes posible",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "R03",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D11",
+   "causa": "Contexto social",
+   "efecto": "Infrarrepresentación femeninda en algunas posiciones",
+   "P": 3,
+   "G": 1,
+   "R": 3,
+   "accion": "Pedir a centros de formación profesional curriculums femeninos",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Seguimiento de este punto desde la Comisión de Igualdad",
+   "id": "R04",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D13",
+   "causa": "Juicio ganado en primera instancia y recurrido",
+   "efecto": "Demanda por 30 M€",
+   "P": 1,
+   "G": 3,
+   "R": 3,
+   "accion": "Dar respuesta al recurso. Informar a los grupos de interés",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "A la espera de la sentencia del recurso, presentado en Ene-24",
+   "id": "R05",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A1",
+   "causa": "Situación macroeconómica",
+   "efecto": "Pérdida de competitividad",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R06",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A2",
+   "causa": "Cambios legislativos",
+   "efecto": "Pérdida de ingresos",
+   "P": 1,
+   "G": 3,
+   "R": 3,
+   "accion": "Repercutir al mercado\nPotenciar eficiencia energética\nMejora en los precios de compra",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Se repercute al mercado a traves del EC\nActualizada la auditoría energética a 31Dic24\nAnalizando opciones con el contrato actual - cambio de contrato desde 01-01-26",
+   "id": "R07",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D3",
+   "causa": "Precio elevado, comparado con WHA",
+   "efecto": "Mayor coste de fabricación",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "Analizar posibilidades en el mercado \"PPA\"",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)",
+   "id": "R08",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A12",
+   "causa": "Cambio legislativo",
+   "efecto": "Mayor coste energético",
+   "P": 3,
+   "G": 1,
+   "R": 3,
+   "accion": "Comprar los derechos a buen precio",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)",
+   "id": "R09",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A13",
+   "causa": "Cambio legislativo",
+   "efecto": "Mayor coste energético",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Comprar los derechos a buen precio",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Se ha comprado a STX un 10% de energía verde para 2024 y 2025, en línea con la legislación vigente (requisito electrointensivos)",
+   "id": "R10",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D1",
+   "causa": "Instalaciones diseñadas para fabricación de granalla",
+   "efecto": "Dificultad para fabricar otros productos",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "Tras la adquisición por parte de SINTO, se ha reorganizado la estructura del grupo y se ha paralizado este proyecto hasta nuevo aviso",
+   "id": "R11",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D4",
+   "causa": "Pérdida de competitividad",
+   "efecto": "Aumento del FCOP (Full Cost of Production)",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "Contención salarial en la negociación del Convenio Colectivo y adecuación de plantilla a volumen de operaciones",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Convenio colectivo 2025",
+   "id": "R12",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D5",
+   "causa": "limitacion de espacio interno de almacenamiento",
+   "efecto": "Diseño de almacen para X toneladas",
+   "P": 2,
+   "G": 3,
+   "R": 6,
+   "accion": "Estudio de plan de viabilidad para utilizar zonas de parking cubiertas para almacén de producto acabado",
+   "resp": "Eneko Ruiz",
+   "plazo": "2025-05",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "R13",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D7",
+   "causa": "Edad media elevada de la plantilla y disminución de la plantilla",
+   "efecto": "Mayor porcentaje de absentismo debido",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Analizar las causas del absentimos y definir, si procede, las medidas necesarias para reducirlo",
+   "resp": "Alfredo Santos/Mario Diez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "",
+   "id": "R14",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D8",
+   "causa": "",
+   "efecto": "",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R15",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D9",
+   "causa": "Operaciones estables y plantilla con mucha antigüedad y estabilidad",
+   "efecto": "Conomiento del negocio por una lado pero necesidad real de regeneración por otro",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Analizar todas las oportunidades para ponderar la edad media de la plantilla",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Estudio de cada una de las potenciales salidas/jubilaciones y tomar la mejor decisión en la sustitución/contratación",
+   "id": "R16",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D14",
+   "causa": "Baja disponibilidad de plástico reciclado de calidad",
+   "efecto": "Mayor consumo de recursos naturales",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R17",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A3",
+   "causa": "Situación geopolítica",
+   "efecto": "Incertidumbre",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R18",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A4",
+   "causa": "Cambios legislativos que pueden modificar las condiciones de trabajo",
+   "efecto": "Inestabilidad en las operaciones",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Anticipar los posibles cambios legales en la definición y planificación de las operaciones",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "No se aprecian riesgos significativos",
+   "id": "R19",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A5",
+   "causa": "Modificación del marco legal de descansos y permisos retribuidos",
+   "efecto": "Modificación en los descansos",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Adaptación del marco legal",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "No se aprecian riesgos significativos",
+   "id": "R20",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A6",
+   "causa": "Reforma laboral",
+   "efecto": "Falta de flexibilidad",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R21",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A7",
+   "causa": "LLegaban camiones de chatarra sin DI",
+   "efecto": "Incumplimiento de la normativa que aplica al transporte de residuos. Posibles multas.",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "Se ha requerido a proveedores que traigan el DI en dos vias, una de las cuales siempre se entrega a Laboratorio.",
+   "resp": "Adrian Cabrera",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Ya implantado, no se observan desvíos",
+   "id": "R22",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A8",
+   "causa": "Necesidad de controlar la cantidad de cada tipo de  material de embalaje puesto en el mercado nacional",
+   "efecto": "Mayor carga de trabajo administrativo",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R23",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A9",
+   "causa": "Agenda verde y ahorro en nuevos impuestos",
+   "efecto": "Reducir huella de carbono y evitar pagar nuevos impuestos",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "Testeo y compra de insumos plasticos con el mayor procentaje posible de plastico recilcado. Y utilizacion de de Big bags reutilizables (especificacion 6.1)",
+   "resp": "Adrian Cabrera",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Plastico reciclado Q1=25,8% // Q2=28,2% // Q3=24,5% // Q4=28,3%    No vemos posible aumentar mas  //////  En tanto los plastico de un solo uso han sido Q1=62,2% // Q2=57,9% // Q3=56,8% // Q4=31%",
+   "id": "R24",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A10",
+   "causa": "Dificultad en la búsqueda de soluciones, especialmente ruido",
+   "efecto": "Posibilidad de sanción",
+   "P": 2,
+   "G": 2,
+   "R": 4,
+   "accion": "Instalación de  aislamiento en determinadas zonas y nueva medición",
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Acción 1039",
+   "id": "R25",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A14",
+   "causa": "Plantilla de edad elevada y contrato de relevo como acceso a la jubilación",
+   "efecto": "Necesidad de contratación y retención de conocimiento",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "Planificación de las jubilaciones",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "No se aprecian riesgos significativos",
+   "id": "R26",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A15",
+   "causa": "Alta rotación en las contratataciones realizadas en los últimos años",
+   "efecto": "Rotación y falta de estabilidad",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "Definir un indicador y análisis de causas",
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Definir indicador, causas y medidas",
+   "id": "R27",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A17",
+   "causa": "Incertidumbre en el mercado",
+   "efecto": "Baja carga de trabajo",
+   "P": 2,
+   "G": 2,
+   "R": 4,
+   "accion": "Intentar movernos hacia otros mercados y tipos de clientes",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ...",
+   "id": "R28",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A18",
+   "causa": "",
+   "efecto": "",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R29",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A19",
+   "causa": "Diseño de la operativa del grupo de esta manera",
+   "efecto": "Ralentización de las operaciones, dificultad en la resolución de problemas",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R30",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A20",
+   "causa": "Apertura del mercado",
+   "efecto": "Bajada de los precios",
+   "P": 2,
+   "G": 2,
+   "R": 4,
+   "accion": "Ampliar el rango de productos y servicios, mejorar nuestra competitividad",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Competencia china presente en España (AMPERE, COMETAL, Euskatfund, ...) y Portugal (R&B, Blasqem, Fundipor) a niveles de precio muy bajos (dumping), oferta de WINOA como único proveedor global a nivel mundial, abrasivos, servicio técnico, repuestos, reparaciones y mantenimientos, recogida de producto usado, maquinaria y otros abrasivos (cw)",
+   "id": "R31",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A21",
+   "causa": "Plazos de suministro a clientes nacionales muy cortos",
+   "efecto": "Posibles problemas de suministro",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "Cambiar la forma en la que nos dirijimos al mercado",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Debida a la situación de incertidumbre global, especialmente en la automoción. Se insisite a los clientes en la necesidad de disponer de previsiones con anticipación (disminución de los niveles de stock a nivel de grupo, working capital)",
+   "id": "R32",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A22",
+   "causa": "Requisitos de los clientes",
+   "efecto": "Disminución de la productividad",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R33",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A23",
+   "causa": "Evolución tecnológica",
+   "efecto": "La bajada de volumenes",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "Adaptar los procesos y potenciar otros productos y mercado",
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "El volumen dedicado al sector del granito es aprox. unas 500 t/año, no se espera una recuperación en los próximos ejercicios",
+   "id": "R34",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A25",
+   "causa": "Cambio climático",
+   "efecto": "Aumento de la exposición al calor del hornero",
+   "P": 2,
+   "G": 2,
+   "R": 4,
+   "accion": "Probar un traje aluminizado de mayor protección al calor que el actual",
+   "resp": "Arkaitz Garcia",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Ha sido probado por el delegado de prevención y el feed back es bueno. Lo van a probar los demás trabajadores.",
+   "id": "R35",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A24",
+   "causa": "",
+   "efecto": "",
+   "P": 2,
+   "G": 1,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R36",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "D12",
+   "causa": "Convenio rígido",
+   "efecto": "Dificultad de respuesta a las necesidades de producción",
+   "P": 1,
+   "G": 2,
+   "R": 2,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "R37",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  },
+  {
+   "fid": "A16",
+   "causa": "",
+   "efecto": "",
+   "P": 1,
+   "G": 1,
+   "R": 1,
+   "accion": "",
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "No es un problema en la actualidad",
+   "id": "R38",
+   "Pr": null,
+   "Gr": null,
+   "Rr": null
+  }
+ ],
+ "opps": [
+  {
+   "fid": "F14",
+   "accion": "Implantarlo",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Mario Díez",
+   "plazo": "2025-06",
+   "estado": "Cerrada",
+   "coment": "Trabajar en el volcado de la información del sistema de captura de datos, en el programa de nómina A3, pruebas iniciales realizadas",
+   "id": "O01"
+  },
+  {
+   "fid": "F15",
+   "accion": "Implantarlo",
+   "V": 1,
+   "R": 2,
+   "VR": 2,
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "",
+   "id": "O02"
+  },
+  {
+   "fid": "O3",
+   "accion": "Estudiar la electrificación del HR1",
+   "V": 2,
+   "R": 1,
+   "VR": 2,
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2025-07",
+   "estado": "Cerrada",
+   "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025",
+   "id": "O03"
+  },
+  {
+   "fid": "O4",
+   "accion": "Tomar contacto con los institutos de FP de la zona",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "",
+   "id": "O04"
+  },
+  {
+   "fid": "O5",
+   "accion": "Evaluación psicosocial y actuar en consecuencia",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Arkaitz García",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "La primera parte (cuantitativa) está realizada, falta por llevar a cabo la segunda parte (cualitativa), que se realizará este año.",
+   "id": "O05"
+  },
+  {
+   "fid": "O8",
+   "accion": "Asistir a formaciones en IA",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Mario Díez",
+   "plazo": "2025-07",
+   "estado": "Cerrada",
+   "coment": "Se ha realizado una formación sobre chat gpt.",
+   "id": "O06"
+  },
+  {
+   "fid": "F20",
+   "accion": "Completar la documentación en tiempo y forma",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Adrián Cabrera",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Presentada en plazo y forma",
+   "id": "O07"
+  },
+  {
+   "fid": "F21",
+   "accion": "Cerrar la compra del 10% en sucesivos años",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Adrián Cabrera",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Comprada a STX en 2024",
+   "id": "O08"
+  },
+  {
+   "fid": "F22",
+   "accion": "",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Alfredo Santos",
+   "plazo": "",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "O09"
+  },
+  {
+   "fid": "F23",
+   "accion": "",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Alfredo Santos",
+   "plazo": "",
+   "estado": "Cerrada",
+   "coment": "Evaluación realizada a nivel de grupo",
+   "id": "O10"
+  },
+  {
+   "fid": "F24",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O11"
+  },
+  {
+   "fid": "F25",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O12"
+  },
+  {
+   "fid": "O9",
+   "accion": "Estudiar la electrificación del HR1",
+   "V": 2,
+   "R": 1,
+   "VR": 2,
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2026-07",
+   "estado": "Cerrada",
+   "coment": "Proyecto para 2026. Prioridad de otros proyectos en 2025",
+   "id": "O13"
+  },
+  {
+   "fid": "O10",
+   "accion": "Pedir propuestas a proveedores",
+   "V": 2,
+   "R": 3,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2026-07",
+   "estado": "Cerrada",
+   "coment": "Realizados análisis preliminares, el principal problema es la variabilidad en el volumen de producción, frente a una compra fija de generación, lo cual genera un riesgo significativo. Contrato cerrado hasta 2027, aplicación a interrumpibles en 2026 (subasta 11Dic25)",
+   "id": "O14"
+  },
+  {
+   "fid": "O11",
+   "accion": "Encargar un estudio",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Dic 25 Se descarta ya que las inversiones las centramos en H3 y H4 donde tenemos mayor efecto positivo en la reducción del coste de producción",
+   "id": "O15"
+  },
+  {
+   "fid": "F1",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O16"
+  },
+  {
+   "fid": "F2",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O17"
+  },
+  {
+   "fid": "F3",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O18"
+  },
+  {
+   "fid": "F4",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O19"
+  },
+  {
+   "fid": "F5",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O20"
+  },
+  {
+   "fid": "F6",
+   "accion": "Transmitir a los nuevos empleados los conocimientos de las personas más veteranas (contratos relevo)",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2026-12",
+   "estado": "En curso",
+   "coment": "Relevo generacional mediante la fórmula de contrato relevo",
+   "id": "O21"
+  },
+  {
+   "fid": "F7",
+   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "El equipo de Ventas en Iberia tiene amplia experiencia y conocimiento del mercado y esto es óptimo para la integración de nuevos productos (cut wire y granalladoras) derivados de la integración en SINTO",
+   "id": "O22"
+  },
+  {
+   "fid": "F8",
+   "accion": "Mantenimiento de un nivel elevado en la calidad del producto, especialmente en el proceso de templado",
+   "V": 3,
+   "R": 1,
+   "VR": 3,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Lo utilizamos como un argumento de peso ante la entrada de material extranjero, especialmente de China",
+   "id": "O23"
+  },
+  {
+   "fid": "F9",
+   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende",
+   "id": "O24"
+  },
+  {
+   "fid": "F10",
+   "accion": "Mantener el nivel de servicio, optimizando la producción y las entregas (shortages, V-Jet)",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "La planta de Balmaseda tiene un elevado nivel de flexibilidad y capacidad de adaptación para servir pedidos en un plazo corto de tiempo",
+   "id": "O25"
+  },
+  {
+   "fid": "F11",
+   "accion": "Potenciar la recogida de residuo, mejora en el FCoP",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "Se incrementa la actividad de recogida de producto usado de nuestros clientes, alineado con la producción de briquetas in house",
+   "id": "O26"
+  },
+  {
+   "fid": "F12",
+   "accion": "Intensificar las reuniones con la parte social hasta alcanzar un acuerdo",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Mario Díez",
+   "plazo": "2025-06",
+   "estado": "Cerrada",
+   "coment": "Se intentará alcanzar un acuerdo para 2 años",
+   "id": "O27"
+  },
+  {
+   "fid": "F13",
+   "accion": "Trabajar estas buenas relaciones mediante reuniones y contactos periodicos",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "O28"
+  },
+  {
+   "fid": "F16",
+   "accion": "Realización de charlas de sensibilización sobre cultura preventiva; semana de la seguridad ;Safety talks sobre diferentes asuntos.",
+   "V": 3,
+   "R": 3,
+   "VR": 9,
+   "resp": "Arkaitz García",
+   "plazo": "2026-12",
+   "estado": "Cerrada",
+   "coment": "Se han realizado dos semanas con diversas formaciones de sguridad al día, en abril y en septiembre.",
+   "id": "O29"
+  },
+  {
+   "fid": "F17",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O30"
+  },
+  {
+   "fid": "F18",
+   "accion": "Estudiar cada uno de los contratos de relevo de manera individualizada",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Mario Díez",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "O31"
+  },
+  {
+   "fid": "F19",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O32"
+  },
+  {
+   "fid": "O1",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O33"
+  },
+  {
+   "fid": "O2",
+   "accion": "",
+   "V": null,
+   "R": null,
+   "VR": 0,
+   "resp": "",
+   "plazo": "",
+   "estado": "",
+   "coment": "",
+   "id": "O34"
+  },
+  {
+   "fid": "O6",
+   "accion": "En 2025 comenzamos varias acciones encaminadas a este tema:\neliminación de los registros en papel;\nintroducción de los datos por parte de producción en sistema online;\ncreación de base de datos.",
+   "V": 2,
+   "R": 2,
+   "VR": 4,
+   "resp": "Carlos Urbasos",
+   "plazo": "2026-12",
+   "estado": "Cerrada",
+   "coment": "",
+   "id": "O35"
+  },
+  {
+   "fid": "O7",
+   "accion": "",
+   "V": 2,
+   "R": 1,
+   "VR": 2,
+   "resp": "Alberto Vidaurrazaga",
+   "plazo": "2026-12",
+   "estado": "Cerrada",
+   "coment": "Postpuesto a nivel de grupo a Q1-26",
+   "id": "O36"
+  },
+  {
+   "fid": "O12",
+   "accion": "Intentar potenciar nuevos nichos de mercado, p.e. eólico, sustituyendo a otros en declive, p.e. granito",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "Cerrada",
+   "coment": "La caída de actividad por la crisis en la automoción no está suponiendo un golpe definitivo en nuestra carga de trabajo. La caída de actividad por la crisis en la automoción está suponiendo una disminución de nuestra carga de trabajo, especialmente concentrada en clientes como FAGOR EDERLAN, TIF, Volvo, ... para tratar de compensarlo, se esta trabajando con clientes del sector renovables, como GRI, HAIZEA WIND, Grupo Daniel Alonso, CS WIND ...",
+   "id": "O37"
+  },
+  {
+   "fid": "O13",
+   "accion": "Contacto específico a cada cliente para informar sobre nuestro nuevo catalogo ampliado de productos y servicios, especial hincapie en el mantenimiento",
+   "V": 3,
+   "R": 2,
+   "VR": 6,
+   "resp": "Alfredo Santos",
+   "plazo": "2025-12",
+   "estado": "En curso",
+   "coment": "Ampliando el rango de productos y servicios, en línea con lo que el grupo SINTO pretende",
+   "id": "O38"
+  }
+ ],
+ "objetivos": [
+  {
+   "id": "B2026-01",
+   "anio": "2026",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de gas de planta por debajo de  385 kWh/t envasada",
+   "acciones": "* Optimizar el flujo de materiales entre temple y revenido para reducir los tiempos de HT1 y HR2 a fuego bajo.\n* Implantar PID de regulación de la temperatura del Secador. Ahora control manual.\n* Optimizar el uso de mecheros de gas en zona refractario al tener una persona en exclusiva de manañana y no a 4 turnos.",
+   "indicador": "kWh/t envasada",
+   "plazo": "2026-12-30",
+   "resp": "AVH",
+   "ref": "385",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-02",
+   "anio": "2026",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de energía eléctrica en los hornos de fusión a menos de 635 kWh/t envasada",
+   "acciones": "* Mantener el tipo de secuencia de los ABPs, reduciendo los calentamientos durante la vida del refractario.\n* Controlar la temperatura de atomización para optimizarla midiendo también la temperatura en la artesa al final de la atomización.\n* Ver la posibildiad de potenciar el ABP2 en las secuencias ya que consume menos.\n* Cambio de bobina y renovación de aislantes, nucleos etc en el ABP2",
+   "indicador": "kWh/t envasada",
+   "plazo": "2026-12-31",
+   "resp": "AVH",
+   "ref": "638",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-03",
+   "anio": "2026",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de energía eléctrica en el resto de planta a menos de 195 kWh/t envasada",
+   "acciones": "* Modificación de aislamiento y resistencias en hornos de revenido 3 y 4\n* Creación de recetas en horno de revenido 2 (horno de menor consumo)\n* Aumentar la productividad de angular fina con nueva forma de organizar la moliendo (premolido en Ferreros)\n* Inspección de fugas de aire comprimido y seguimiento y correctivo por mantenimiento (Vista)",
+   "indicador": "kWh/t envasada",
+   "plazo": "2026-12-30",
+   "resp": "AVH",
+   "ref": "195",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-04",
+   "anio": "2026",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-05",
+   "anio": "2026",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-06",
+   "anio": "2026",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-07",
+   "anio": "2026",
+   "origen": "CALIDAD",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-08",
+   "anio": "2026",
+   "origen": "CALIDAD",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-09",
+   "anio": "2026",
+   "origen": "SEGURIDAD",
+   "objetivo": "Conseguir un índice de proactividad del 100%",
+   "acciones": "",
+   "indicador": "AG",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-10",
+   "anio": "2026",
+   "origen": "SEGURIDAD",
+   "objetivo": "Reportar más de 500 condiciones inseguras.",
+   "acciones": "",
+   "indicador": "AG",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-11",
+   "anio": "2026",
+   "origen": "RRHH",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2026-12",
+   "anio": "2026",
+   "origen": "RRHH",
+   "objetivo": "",
+   "acciones": "",
+   "indicador": "",
+   "plazo": "2026-12-30",
+   "resp": "",
+   "ref": "",
+   "seg": "",
+   "t": [
+    "",
+    "",
+    "",
+    ""
+   ],
+   "res": [
+    "",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-01",
+   "anio": "2025",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de gas de planta a menos de 375 kWh/t envasada",
+   "acciones": "Funcionar con el HT1 con caudales nominales (ascast 350-400 toneladas de stock).                                                                                                                               Realizar mantenimiento preventivo del secador (revisar cribas en cuanto a limpieza).                                                                                                                         Definir una alarma del tiempo de secado.",
+   "indicador": "kWh/t envasada",
+   "plazo": "2025-12-31",
+   "resp": "AVH",
+   "ref": "372",
+   "seg": "Turnos con temple a fuego bajo por bajo volumen incluso trabajando a 3,5 Tn/h",
+   "t": [
+    "403",
+    "399",
+    "383",
+    "385"
+   ],
+   "res": [
+    "Valor afectado por el bajo numero de Tn envasadas.",
+    "Valor afectado por el bajo numero de Tn envasadas.",
+    "Valor afectado por el bajo numero de Tn envasadas.",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-02",
+   "anio": "2025",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de energía eléctrica en los hornos de fusión a menos de 700 kWh/t envasada",
+   "acciones": "Adaptar la secuencia de alternancia de los hornos de fusion en funcion de las toneladas a producir al mes.",
+   "indicador": "kWh/t envasada",
+   "plazo": "2025-12-31",
+   "resp": "AVH",
+   "ref": "704",
+   "seg": "",
+   "t": [
+    "697",
+    "696",
+    "696",
+    "689"
+   ],
+   "res": [
+    "Hemos consultado si es posible instalar contadores individuales a los hornos ABP.",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-03",
+   "anio": "2025",
+   "origen": "EFICIENCIA ENERGÉTICA",
+   "objetivo": "Reducir el consumo de energía eléctrica en el resto de planta a menos de 165 kWh/t envasada",
+   "acciones": "Priorización del funcionamiento con el HR2 en vez de con el HR3 y el HR4 ya que consume menos.                                                                                                  Implantar el proyecto de sectorización de la aspiración de molinos.                                                                           Optimizar los caudales de la aspiración de proceso.",
+   "indicador": "kWh/t envasada",
+   "plazo": "2025-12-31",
+   "resp": "AVH",
+   "ref": "174",
+   "seg": "",
+   "t": [
+    "206",
+    "192",
+    "190",
+    "195"
+   ],
+   "res": [
+    "Fase de definicion de necesidades en las aspiraciones. (Mayo a Junio). Petición de ofertas Julio.",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-04",
+   "anio": "2025",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "Utilizar el 50% de plástico de plástico reciclado",
+   "acciones": "Utilizar láminas de plástico 70% reciclado\nUtilizar big bags reutilizables\nUtilizar tubo estirable con el maximo posible de plastico reciclado",
+   "indicador": "% plástico reciclado",
+   "plazo": "2025-12-31",
+   "resp": "JLSC/AVH",
+   "ref": "18.5",
+   "seg": "Finalizar la transicion de tubo estirable y bigbag 1,5t. Deberiamos llegar a 29,6% de plástico reciclado  en Q4 (& 37% de plastico de un solo uso). Resultado final Q4 28.3% reciclado (& 31% de un solo uso).",
+   "t": [
+    "25.8",
+    "28.2",
+    "24.5",
+    "28.3"
+   ],
+   "res": [
+    "Dejamos de utilizar big bags de un solo uso, comenzamos a usar big bags reutilizables. Tambien se comenzó a utilizar lamina separadora 70% de plastico reciclado.",
+    "Validamos los nuevos empaques",
+    "Transicionamos en: a) bigbags de 1,5ton, tambien a reutilizables, y b) en tubo estirable, pruba con 30%",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-05",
+   "anio": "2025",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "Reducir el contenido de escoria/refractario generada un 5%",
+   "acciones": "Separar la escoria del refractario para monitorizarlos por separado\nPruebas de diferentes refractarios para valorar su rendimiento",
+   "indicador": "kg escoria/t fundida",
+   "plazo": "2025-12-31",
+   "resp": "CU/JLSC",
+   "ref": "23.11",
+   "seg": "",
+   "t": [
+    "12.96",
+    "27.33",
+    "15.54",
+    ""
+   ],
+   "res": [
+    "Separamos escoria y refractario desde el 23/03. el dato del T1 es de la suma de escoria y refractario",
+    "",
+    "",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-06",
+   "anio": "2025",
+   "origen": "ASPECTO AMBIENTAL",
+   "objetivo": "Reducir consumo de hipoclorito un 10%",
+   "acciones": "Parada dosificación / Legionella\nAsociar la puesta en marcha de la dosificación de cloro a las bombas de atomización.\nArracar la dosificación de cloro antes de poner en marcha las torres. Procedimientar y poner indciaciones visuaes en campo",
+   "indicador": "kg/tm producida",
+   "plazo": "2025-12-31",
+   "resp": "EM",
+   "ref": "0.5852413111513753",
+   "seg": "",
+   "t": [
+    "0.47",
+    "0.42",
+    "0.49",
+    "0.54"
+   ],
+   "res": [
+    "Se ha logrado reducir el consumo más de lo esperado, un 20,34%. Para esto, se redujeron los límites del hipoclorito el 13 de marzo.",
+    "El consumo de hipoclorito se ha reducido con respecto al primer trimestre.",
+    "Resultado del indicador más elevado ya que en agosto, las toneladas producidas fueron de cero.",
+    "Se ha conseguido reducir algo, sin embargo no se ha llegado al objetivo."
+   ]
+  },
+  {
+   "id": "B2025-07",
+   "anio": "2025",
+   "origen": "CALIDAD",
+   "objetivo": "Reducir el nº de NCI en granulometrías de la mecánica un 10%",
+   "acciones": "Formar a producción para que hagan ensayos de granulometría.\nProcedimentar lo relaccionado con las cribas. Formación asociada.\nVisualizar para compartir con producción los resultados de las granulometría respecto a lo esperado.\nDefinir acciones correctoras cuando hay desviaciones",
+   "indicador": "NCI mecánica últimos 12 meses",
+   "plazo": "2025-12-31",
+   "resp": "EM",
+   "ref": "161",
+   "seg": "No se ha conseguido reducir las NCI, ya que al producir AMS y meter las granulometrías del GH80 y el GH120 juntas, se obtienen más NCI.",
+   "t": [
+    "55",
+    "107",
+    "130",
+    "160"
+   ],
+   "res": [
+    "Respecto al primer trimestre del 2024 nos encontramos por encima con 10 NCI más.\nRespecto al valor de referencia, este primer trimestre constituye ya el 34%.",
+    "",
+    "El mes de agosto no hubieron ensayos.",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-08",
+   "anio": "2025",
+   "origen": "CALIDAD",
+   "objetivo": "Reducir el nº de reclamaciones por transporte un 10%",
+   "acciones": "Hacer seguimiento a las compañias de transporte, especiamente en la modalidad de grupaje.",
+   "indicador": "Nº de reclamaciones por transporte /1000 t vendidas",
+   "plazo": "2025-12-31",
+   "resp": "ER",
+   "ref": "1.4",
+   "seg": "Q1–Q4: 0,77 (↓ 45,3 % vs 1,40). Objetivo  superado.",
+   "t": [
+    "1.56",
+    "0.66",
+    "0.5",
+    "0.41"
+   ],
+   "res": [
+    "1,56 (↑ 11,1 % vs valor referencia 1,40)\nEmpeoramiento respecto al objetivo (1,40), con un incremento del 11,1 % del índice de reclamaciones en el Q1.",
+    "0,56 (↓ 60,2 % vs 1,40) – Mejora muy notable respecto al referente.",
+    "0,50 (↓ 63,9 % vs 1,40) – Mejora muy significativa.",
+    "0,41 (↓ 70,4 % vs 1,40) – Mejora muy buena."
+   ]
+  },
+  {
+   "id": "B2025-09",
+   "anio": "2025",
+   "origen": "SEGURIDAD",
+   "objetivo": "Conseguir un índice de proactividad del 100%",
+   "acciones": "Aumentar el número inspecciones de 72 a 76 y llegar al objetivo de 16 horas de formación por persona.",
+   "indicador": "%proactividad",
+   "plazo": "2025-12-31",
+   "resp": "AG",
+   "ref": "96.8",
+   "seg": "Se han logrado llevar a cabo 76 inspecciones y 16,3 horas de formación por persona.  Respecto a las horas de formación, destacar el mes de abril, en el cual se llevaron a cabo muchas formaciones en una semana de formaciones y el mes de septiembre debido a la semana de la seguridad.",
+   "t": [
+    "26.735",
+    "60.41",
+    "83.33",
+    "103.7"
+   ],
+   "res": [
+    "Se han llevado a cabo 25 inspeciones de seguridad y 3 horas formativas por persona. Anualizandolo, si conseguiriamos hacer 100 inspecciones, superando el objetivo, y 12 horas por persona, no llegando al objetivo de 16 horas",
+    "Se han llevado a cabo 17 inspecciones de seguridad, menos que en el primer trimestre. En total suman 42 inspecciones. Anualizandolo, llegaríamos a hacer 84 inspecciones en todo el año. Se han impartido 6 horas de formación por persona, que sumando las del primer trimestre serían 9 horas por persona. Anualizandolo, llegaríamos a hacer 18 horas por persona.",
+    "Se han realizado 15 inspecciones, llegando a un total de 57, que anualizadas serían 76, y cumpliríamos el objetivo. Respecto a las horas de formación, se han hecho 4 horas de formación, que en total son 13 horas de formación y anualizadas 17 horas por persona.",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-10",
+   "anio": "2025",
+   "origen": "SEGURIDAD",
+   "objetivo": "Reportar más de 500 condiciones inseguras.",
+   "acciones": "Planificar dos inspecciones por semana involucrando a personas que no son de operaciones. Formación a los encargados de planta de la identificación de condiciones inseguras y del uso del red online.",
+   "indicador": "Número de condiciones inseguras reportadas",
+   "plazo": "2025-12-31",
+   "resp": "AG",
+   "ref": "132",
+   "seg": "Paera haber conseguido el objetivo ha sido necesario llevar a cabo las 2 inspecciones por semana determinadas al principio de año, además de las condiciones inseguras detectadas en las visitas diarias a plar y reportadas por los trabajadores.",
+   "t": [
+    "261",
+    "395",
+    "473",
+    "547"
+   ],
+   "res": [
+    "En este primer trimestre se han detectado muchas condiciones inseguras en cada una de las inspecciones y visitas a planta realizadas. Se han llevado a cabo dos o más inspecciones a la semana.",
+    "Se han seguido realizando las inspecciones y visitas semanales/diarias, y se han observado 121 condiciones inseguras.",
+    "En este tercer trimestre se han detectado 78 condiciones inseguras.",
+    ""
+   ]
+  },
+  {
+   "id": "B2025-11",
+   "anio": "2025",
+   "origen": "RRHH",
+   "objetivo": "Internalizar la nómina",
+   "acciones": "Realizar las acciones oportunas para internalizar integralmente el proceso de nómina y la administración de personal.",
+   "indicador": "Traspaso efectivo de la nómina y finalizar contrato con proveedor actual de ese servicio",
+   "plazo": "2025-12-31",
+   "resp": "MD",
+   "ref": "Finalizar contrato con Grupo Castilla",
+   "seg": "",
+   "t": [
+    "No",
+    "No",
+    "No",
+    "Sí"
+   ],
+   "res": [
+    "Parametrización del software de nómina que se utlizará internamente. Sustitución del parte de trabajo actual a un parte de trabajo digital. Realizar en paralelo las nóminas de empleados de oficina.",
+    "Realización en paralelo de las nóminas de empleados de oficina y taller así como autorización y gestión de Sistema Red.",
+    "Se siguen realizando ajustes de parametrización, control de partes digital y nómina en paralelo para dejar de funcionar con la empresa subcontratada en el Q4. Gestión autonóma de Sistema Red.",
+    "La nómina se realiza internamente y de manera autónoma. El contrato con Grupo Castilla finalza el 30/09/2025 y se gestiona internamente el Sistema Red."
+   ]
+  },
+  {
+   "id": "B2025-12",
+   "anio": "2025",
+   "origen": "RRHH",
+   "objetivo": "Convenio Colectivo 2025",
+   "acciones": "Desarrollar un proceso de negociación que permita mejorar las condiciones de trabajo y adecuar las necesidades del negocio. Actualizar el convenio en relación con la nueva legislación de igualdad (LGTBIQIA+).",
+   "indicador": "Desarrollo efectivo y continuado de la negociación colectiva",
+   "plazo": "31/12/2025",
+   "resp": "MD",
+   "ref": "Firma del Convenio Colectivo",
+   "seg": "",
+   "t": [
+    "No",
+    "No",
+    "Sí",
+    "Sí"
+   ],
+   "res": [
+    "Se ha iniciado el proceso legal de negociación con la oportuna Comisión de Negociación, manteniendo reuniones periódicas y con un proceso de negociación hasta ahora esperado.",
+    "Se continua el proceso legal de negociación con la oportuna Comisión de Negociación, manteniendo reuniones periódicas y con un proceso de negociación hasta ahora esperado.",
+    "Firma y publicación del convenio colectivo para los años 2025 y 2026",
+    ""
+   ]
+  }
+ ],
+ "rev_texto": [],
+ "imgs": []
+}

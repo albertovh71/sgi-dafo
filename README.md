@@ -1,18 +1,33 @@
-# SGI · DAFO y riesgos (ISO 9001 / 14001 / 45001 / 50001)
+# SGI · Contexto y planificación del SGI (Winoa Ibérica)
 
-Gestión del contexto de la organización (cláusula 4.1), partes interesadas (4.2) y riesgos/oportunidades (6.1),
-etiquetados por norma. Primera versión: DAFO por revisiones, partes interesadas, riesgos y oportunidades (P×I).
+Gestión del análisis de contexto del Sistema de Gestión Integrado (ISO 9001 / 14001 / 45001 / 50001):
+datos generales, partes interesadas, factores externos e internos, DAFO, riesgos y oportunidades,
+procesos, objetivos anuales y Revisión por la Dirección (con generación del Word en formato Winoa).
 
-## Portabilidad (pensado para integrarlo en VISTA)
-- **Un solo proceso Node** (`server/server.cjs`) sirve API y front. Única dependencia de servidor: `better-sqlite3`.
-- **Un solo fichero de datos**: `data/sgi.db` (SQLite). Copiarlo = migrar.
-- Config por entorno: `PORT` (8096), `HOST` (127.0.0.1), `DATA_DIR`, `DIST_DIR`.
-- Front con `base: './'` y llamadas `api/...` relativas: funciona bajo cualquier subruta si el proxy quita el prefijo.
-- Sin login propio: la autenticación la pone lo que haya delante.
-- `GET /api/export` / `POST /api/import` (JSON completo) para mover datos entre instancias sin tocar la BD.
-- API REST uniforme: `PUT|DELETE /api/{revisions|factors|parties|risks}/:id`, `GET /api/data`.
-  Para embeberlo en VISTA basta con reutilizar estas rutas o portar las 4 tablas.
+Producción: <https://sgi.albertovh71.com> (Cloudflare Tunnel + Cloudflare Access, servicio `sgi-dafo`, puerto 8096).
 
-## Uso
-    npm install && npm run build && npm start      # http://127.0.0.1:8096
-    npm run dev                                    # Vite con proxy a :8096
+## Diseño pensado para migrar a VISTA
+- **Un proceso Node** (`server/server.cjs`) con una única dependencia (`better-sqlite3`). Sirve la API (`/api/*`) y el front estático (`public/`). **Sin build.**
+- **Un fichero de datos**: `DATA_DIR/sgi.db` (SQLite). Copiarlo = migrar. Imágenes de la revisión dentro del mismo fichero.
+- **Configuración por entorno**: `PORT` (8096), `HOST` (127.0.0.1), `DATA_DIR` (`./data`), `PUBLIC_DIR` (`./public`).
+- **Rutas relativas** en el front (`api/...`): funciona bajo cualquier prefijo (p. ej. `/sgi/`) si el proxy lo reenvía.
+- **Sin autenticación propia**: se delega en lo que haya delante (Cloudflare Access / VISTA).
+- **Export/Import JSON**: `GET /api/export` (con imágenes) y `POST /api/import` (reemplaza todo).
+- El front es JS plano (`public/app.js`): para integrarlo en VISTA basta montar `public/` y proxiar `/api/`.
+
+## Arranque
+    npm install --omit=dev
+    npm start                      # http://127.0.0.1:8096
+
+## Datos iniciales (una sola vez, con la BD vacía)
+    curl -X POST http://127.0.0.1:8096/api/import --data-binary @seed/contexto-2026.json
+
+`seed/contexto-2026.json` sale de `Contexto 2026.xlsx` y `Objetivos anuales.xlsx` (los Excel originales no se han modificado).
+
+## Modelo
+Tabla `items(col, id, data JSON)` con las colecciones `meta`, `factors`, `parties`, `risks`, `opps`, `objetivos`, `rev_texto`;
+tabla `imgs` para las imágenes de la revisión. Reglas: R = P×G (1–3), VR = V×R; R ≥ 4 o G = 3 exige acción o justificación;
+estados `En curso` / `Cerrada` / vacío; el proceso (PG/PS) se elige en el factor y lo heredan riesgos y oportunidades.
+
+## Copia de seguridad
+Incluida en `/home/ubuntu/backups/backup.py` (diaria 03:30, cifrada a Drive).
