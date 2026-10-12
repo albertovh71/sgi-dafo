@@ -27,7 +27,7 @@ Producción: <https://sgi.albertovh71.com> (Cloudflare Tunnel + Cloudflare Acces
 ## Modelo
 Tabla `items(col, id, data JSON)` con las colecciones `meta`, `factors`, `parties`, `risks`, `opps`, `objetivos`, `rev_texto`;
 tabla `imgs` para las imágenes de la revisión. Cada riesgo/oportunidad tiene una o varias acciones (`acciones[]` con acción, responsable, plazo, estado, comentarios); su estado se deriva de ellas. Los cambios en factores desde Externo/Interno pasan por un borrador que se aplica o se deshace. Reglas: R = P×G (1–3), VR = V×R; R ≥ 4 o G = 3 exige acción o justificación;
-estados `En curso` / `Cerrada` / vacío; el proceso (PG/PS) se elige en el factor y lo heredan riesgos y oportunidades.
+un riesgo puede enlazarse a varios factores (`fids`): la misma frase como debilidad y como amenaza se evalúa una sola vez; estados `En curso` / `Cerrada` / vacío; el proceso (PG/PS) se elige en el factor y lo heredan riesgos y oportunidades.
 
 ## Ciclos anuales (histórico)
 Cada año es un **ciclo** completo (DAFO, partes, riesgos, oportunidades, objetivos y revisión por la dirección): una «foto» por año.

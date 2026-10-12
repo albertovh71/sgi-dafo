@@ -11,6 +11,10 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const nl=s=>esc(s).replace(/\n/g,'<br>');
 const lvl=r=>r>=6?'r':r>=3?'y':r>=1?'g':'n';
 let fm={};const reindex=()=>{fm=Object.fromEntries(D.factors.map(f=>[f.id,f]))};
+// Un riesgo puede estar enlazado a varios factores (misma frase como debilidad y como amenaza): se evalúa una sola vez.
+const riskFids=r=>(r.fids&&r.fids.length)?r.fids:[r.fid];
+const SING={D:'Debilidad',A:'Amenaza',F:'Fortaleza',O:'Oportunidad'};
+const claveTxt=s=>fold(String(s||'').trim().replace(/\s+/g,' '));
 const rp=x=>x.fid&&fm[x.fid]?fm[x.fid].proceso:x.proceso;
 const rt=x=>x.fid&&fm[x.fid]?fm[x.fid].texto:x.factor;
 
@@ -32,7 +36,7 @@ function normAcc(x){ // datos antiguos: una sola acción en el propio registro �
   if(!Array.isArray(x.acciones)){const a={accion:x.accion||'',resp:x.resp||'',plazo:x.plazo||'',estado:x.estado||'',coment:x.coment||''};x.acciones=(a.accion||a.resp||a.plazo||a.coment)?[a]:[]}
   delete x.accion;delete x.resp;delete x.plazo;delete x.coment;delete x.proceso;delete x.factor;delete x.plazoRaw;return x}
 function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.estado==='Cerrada')?'Cerrada':(a.some(z=>z.estado)?'En curso':'')}
-const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
+const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>riskFids(r).includes(f.id)):D.opps.find(o=>o.fid===f.id);
 const valorado=x=>('P' in x)?(!!x.P&&!!x.G):(!!x.V&&!!x.R);
 // un factor está evaluado cuando tiene fila de riesgo/oportunidad Y está valorada (P y G, o V y R)
 // Riesgo: evaluado si P y G están valoradas. Oportunidad: evaluada si tiene V y R, o si no tiene ninguna acción
@@ -45,13 +49,31 @@ function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guar
 let FOCO=null;
 // Cada factor del DAFO tiene siempre su fila en Riesgos (D, A) u Oportunidades (F, O), sin valorar hasta que el usuario la evalúe.
 async function asegurarFilas(){
-  const nuevos=[];if(RO)return 0;
+  const nuevos=[],cambios=[],borrar=[];if(RO)return 0;
+  const esRiesgo=f=>f.tipo==='D'||f.tipo==='A';
+  const vacia=r=>!r.P&&!r.G&&!(r.acciones||[]).length&&!(r.causa||'').trim()&&!(r.efecto||'').trim()&&!(r.just||'').trim();
+  // 1) filas automáticas vacías que duplican un riesgo ya existente de la misma frase (debilidad + amenaza) → se fusionan
+  for(const r of D.risks.slice()){
+    if(!/^R-/.test(r.id)||riskFids(r).length>1||!vacia(r))continue;
+    const f=fm[r.fid];if(!f)continue;
+    const gem=D.factors.find(x=>x.id!==f.id&&esRiesgo(x)&&claveTxt(x.texto)===claveTxt(f.texto)&&D.risks.some(y=>y!==r&&riskFids(y).includes(x.id)));
+    if(!gem)continue;
+    const base=D.risks.find(y=>y!==r&&riskFids(y).includes(gem.id));
+    base.fids=[...new Set([...riskFids(base),...riskFids(r)])];
+    D.risks=D.risks.filter(y=>y!==r);cambios.push(base);borrar.push(r);
+  }
+  // 2) cada factor sin fila: si tiene un gemelo (misma frase, debilidad/amenaza) se enlaza a su riesgo; si no, fila nueva
   for(const f of D.factors){
     if(fila0(f))continue;
-    if(f.tipo==='D'||f.tipo==='A'){const r={id:'R-'+f.id,fid:f.id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null};D.risks.push(r);nuevos.push(['risks',r])}
-    else{const o={id:'O-'+f.id,fid:f.id,V:null,R:null,VR:0,acciones:[],estado:'',just:''};D.opps.push(o);nuevos.push(['opps',o])}
+    if(esRiesgo(f)){
+      const gem=D.factors.find(x=>x.id!==f.id&&esRiesgo(x)&&claveTxt(x.texto)===claveTxt(f.texto)&&fila0(x));
+      if(gem){const base=fila0(gem);base.fids=[...new Set([...riskFids(base),f.id])];cambios.push(base);continue}
+      const r={id:'R-'+f.id,fid:f.id,fids:[f.id],causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null};D.risks.push(r);nuevos.push(['risks',r]);
+    }else{const o={id:'O-'+f.id,fid:f.id,V:null,R:null,VR:0,acciones:[],estado:'',just:''};D.opps.push(o);nuevos.push(['opps',o])}
   }
-  for(const [col,x] of nuevos){try{await api('PUT',`api/${col}/${encodeURIComponent(x.id)}`,x)}catch(e){toast('NO SE HA GUARDADO una fila nueva: '+e.message,true)}}
+  for(const [col,x] of nuevos.concat([...new Set(cambios)].map(r=>['risks',r]))){try{await api('PUT',`api/${col}/${encodeURIComponent(x.id)}`,x)}catch(e){toast('NO SE HA GUARDADO una fila: '+e.message,true)}}
+  for(const r of borrar){try{await api('DELETE',`api/risks/${encodeURIComponent(r.id)}`)}catch(e){toast('No se pudo quitar una fila duplicada: '+e.message,true)}}
+  if(cambios.length)toast(`${new Set(cambios).size} riesgo(s) enlazado(s) a debilidad y amenaza con la misma frase: se evalúan una sola vez`);
   return nuevos.length;
 }
 function evaluar(id){const f=fm[id];
@@ -169,20 +191,26 @@ function fdToggle(id,w){if(RO)return;fdStart();const g=fdGrupo(id);if(!g.length)
   if(ex){if(g.length===1){toast('Un factor necesita al menos una opción. Para quitarlo usa la papelera.',true);return}FD=FD.filter(x=>x.id!==ex.id)}
   else FD.push({id:nid('F'),tipo:t,texto:g[0].texto,cat:g[0].cat,proceso:g[0].proceso||''});
   render()}
+function filasSoloDe(ids){return D.risks.filter(r=>riskFids(r).every(i=>ids.has(i))).length+D.opps.filter(o=>ids.has(o.fid)).length}
 function fdBorrarFactor(id){fdStart();const g=fdGrupo(id);if(!g.length)return;
-  const n=g.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
+  const n=filasSoloDe(new Set(g.map(f=>f.id)));
   if(!confirm(`¿Quitar este factor del aspecto?${n?`\n\nTiene ${n} riesgo(s)/oportunidad(es) enlazados que también se eliminarán al aplicar los cambios.`:''}`))return;
   const ids=new Set(g.map(f=>f.id));FD=FD.filter(f=>!ids.has(f.id));render()}
 function fdBorrarAspecto(tab,cat){fdStart();const T=TABT[tab];const fs=FD.filter(f=>(f.cat||'(sin categoría)')===cat&&T.includes(f.tipo));
-  const n=fs.reduce((a,f)=>a+D.risks.filter(r=>r.fid===f.id).length+D.opps.filter(o=>o.fid===f.id).length,0);
+  const n=filasSoloDe(new Set(fs.map(f=>f.id)));
   if(!confirm(`¿Eliminar el aspecto «${cat}» con sus ${fs.length} factor(es)?${n?`\n\nImplica eliminar ${n} riesgo(s)/oportunidad(es) enlazados al aplicar los cambios.`:''}`))return;
   FD=FD.filter(f=>!((f.cat||'(sin categoría)')===cat&&T.includes(f.tipo)));FE[tab]=FE[tab].filter(c=>c!==cat);render()}
 function fdDiff(){
   const m0=Object.fromEntries(D.factors.map(f=>[f.id,f])),m1=Object.fromEntries((FD||D.factors).map(f=>[f.id,f]));
   const nuevos=(FD||[]).filter(f=>!m0[f.id]),borr=D.factors.filter(f=>!m1[f.id]);
   const mod=(FD||[]).filter(f=>m0[f.id]&&JSON.stringify(f)!==JSON.stringify(m0[f.id]));
-  const rb=D.risks.filter(r=>borr.some(f=>f.id===r.fid)),ob=D.opps.filter(o=>borr.some(f=>f.id===o.fid));
-  return {nuevos,borr,mod,rb,ob};
+  const del=new Set(borr.map(f=>f.id));
+  const rb=[],rm=[];
+  for(const r of D.risks){const ids=riskFids(r),rest=ids.filter(i=>!del.has(i));
+    if(!rest.length)rb.push(r);
+    else if(rest.length<ids.length)rm.push({...r,fid:rest[0],fids:rest})}
+  const ob=D.opps.filter(o=>del.has(o.fid));
+  return {nuevos,borr,mod,rb,ob,rm};
 }
 function fdDialog(next){
   const d=fdDiff(),vacios=FE.externo.length+FE.interno.length;
@@ -204,10 +232,11 @@ async function fdAplicar(){
   const d=fdDiff(),n=FDNEXT;FDNEXT=null;
   try{
     for(const f of d.nuevos.concat(d.mod))await api('PUT',`api/factors/${encodeURIComponent(f.id)}`,f);
+    for(const r of d.rm)await api('PUT',`api/risks/${encodeURIComponent(r.id)}`,r);
     for(const r of d.rb)await api('DELETE',`api/risks/${encodeURIComponent(r.id)}`);
     for(const o of d.ob)await api('DELETE',`api/opps/${encodeURIComponent(o.id)}`);
     for(const f of d.borr)await api('DELETE',`api/factors/${encodeURIComponent(f.id)}`);
-    D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r));D.opps=D.opps.filter(o=>!d.ob.includes(o));
+    D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r)).map(r=>d.rm.find(x=>x.id===r.id)||r);D.opps=D.opps.filter(o=>!d.ob.includes(o));
     FD=null;FE={externo:[],interno:[]};reindex();const nf=await asegurarFilas();cerrar();toast(nf?`Cambios aplicados · ${nf} fila(s) nuevas en Riesgos/Oportunidades`:'Cambios aplicados');n?n():render();
   }catch(e){FD=null;FE={externo:[],interno:[]};cerrar();toast('NO SE HAN APLICADO TODOS LOS CAMBIOS: '+e.message+'. Se han recargado los datos.',true);await boot()}
 }
@@ -372,7 +401,7 @@ function riesgos(){
     return A.map((a,j)=>{
       const first=j===0, last=j===n-1;
       const add=last?`<div><button class="ed" onclick="editar('risk','${r.id}',{addAcc:1})">+ acción</button></div>`:'';
-      const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
+      const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button>${riskFids(r).length>1?`<div class="meta" title="El mismo riesgo aparece como debilidad y como amenaza en el DAFO: se evalúa una sola vez">${riskFids(r).map(i=>fm[i]?`<span class="tag">${SING[fm[i].tipo]} · ${esc(fm[i].cat||'sin aspecto')}</span>`:'').join('')}</div>`:''}</td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
         <td${rs}>${sel(i,'P',r.P,['',1,2,3])}</td><td${rs}>${sel(i,'G',r.G,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R??'—'}</span>${r.prev&&r.prev.R!=null?`<div class="prev">antes: P${r.prev.P}·G${r.prev.G}=${r.prev.R}</div>`:''}</td>`:'';
       const mid=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&requiere(r)&&!tieneAcc(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td>${esc(a.resp)}</td>
         <td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td>
@@ -655,7 +684,7 @@ function coherencia(){
   const k=(n,t)=>`<div class="card kpi"><b class="${n?'warn':''}">${n}</b><span>${t}</span></div>`;
   return `<div class="kpis">${k(sinEv.length,'factores sin evaluar')}${k(sinAcc.length+sinAccO.length,'exigen acción y no la tienen')}${k(sinEst.length,'riesgos sin estado')}${k(cerSin.length,'cerrados sin residual')}${k(venc.length,'con plazo vencido')}</div>
   <p class="mut" style="margin-top:0">Comprobaciones automáticas de que el análisis está completo y es coherente.</p>
-  ${bloque('Factores del DAFO sin evaluar',sinEv.map(f=>`${esc(f.texto)} <span class="tag">${TIPOS[f.tipo].n.slice(0,-1)}</span> <span class="tag">${esc(proc(f.proceso))}</span>`),'Están en el DAFO pero no tienen fila en Riesgos u Oportunidades.')}
+  ${bloque('Factores del DAFO sin evaluar',sinEv.map(f=>`${esc(f.texto)} <span class="tag">${SING[f.tipo]}</span> <span class="tag">${esc(proc(f.proceso))}</span>`),'Están en el DAFO pero no tienen fila en Riesgos u Oportunidades.')}
   ${bloque('Riesgos que exigen acción y no la tienen',sinAcc.map(r=>`${esc(rt(r))}: P${r.P} × G${r.G} = ${r.R}`),'R ≥ 4, o G = 3: hace falta una acción o una justificación escrita.')}
   ${bloque('Oportunidades con V×R = 9 sin acción ni justificación',sinAccO.map(o=>`${esc(rt(o))}: V${o.V} × R${o.R} = ${o.VR}`),'Una oportunidad de máxima viabilidad y rentabilidad debe tener acción, o una justificación escrita de por qué no se aprovecha.')}
   ${bloque('Riesgos sin valorar (P o G vacíos)',sinValR.map(r=>esc(rt(r))),'Pendientes de que valores su probabilidad y gravedad.')}
