@@ -40,5 +40,10 @@ Cada año es un **ciclo** completo (DAFO, partes, riesgos, oportunidades, objeti
 - `GET /api/data?c=AAAA`, `GET /api/ciclos`, `POST /api/ciclos {desde, anio}`, `POST /api/ciclos/AAAA/cerrar`.
   Las colecciones se escriben con `?c=AAAA`.
 
+## Copias de seguridad del ciclo (desde la aplicación)
+En *Datos generales*: **Crear copia ahora** guarda el ciclo completo (JSON con imágenes) en `DATA_DIR/copias-ciclos/` (o `BACKUP_DIR`), en el propio servidor.
+**Restaurar** sustituye el contenido del ciclo por el de la copia (solo con el ciclo abierto) y antes guarda una copia automática del estado actual.
+API: `GET/POST /api/backups?c=AAAA`, `POST /api/backups/ID/restaurar?c=AAAA`, `DELETE /api/backups/ID`.
+
 ## Copia de seguridad
 Incluida en `/home/ubuntu/backups/backup.py` (diaria 03:30, cifrada a Drive).

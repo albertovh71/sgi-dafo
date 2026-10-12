@@ -160,7 +160,8 @@ function render(){
   document.getElementById('view').innerHTML=VIEWS[S.tab]();
   pintarCiclo();
   pintarBuscar();
-  if(RO)document.querySelectorAll('#view button:not(.keep),#view select:not(.keep),#view input,#view textarea').forEach(e=>{e.disabled=true});
+  if(S.tab==='general')cargarCopias();
+  if(RO)document.querySelectorAll('#view button:not(.keep),#view select:not(.keep),#view input:not(.keep),#view textarea').forEach(e=>{e.disabled=true});
   if(FOCO){const id=FOCO;FOCO=null;
     const rows=[...document.querySelectorAll('#view tr[data-rid]')].filter(r=>r.dataset.rid===id);
     if(rows.length){const tb=rows[0].closest('tbody');if(tb)tb.classList.remove('shut');
@@ -184,7 +185,7 @@ function general(){
    <div class="card kpi"><b>${D.risks.length+D.opps.length}</b><span>riesgos y oportunidades (${D.risks.length} + ${D.opps.length})</span></div></div>
   <div class="card pad" style="max-width:560px"><h2>Datos generales <button class="btn ed" onclick="editar('meta','main')">✎ Editar</button></h2>
    <table><tbody><tr><th>Fecha de elaboración</th><td>${esc(fecha(m.fecha))}</td></tr>
-   <tr><th>Participantes</th><td>${m.participantes.map(esc).join('<br>')||'<span class="mut">—</span>'}</td></tr></tbody></table></div>${cicloCard()}`;
+   <tr><th>Participantes</th><td>${m.participantes.map(esc).join('<br>')||'<span class="mut">—</span>'}</td></tr></tbody></table></div>${cicloCard()}${copiasCard()}`;
 }
 const pl2=c=>c.toLowerCase().replace(/d$/,'des')+(/d$/.test(c)?'':'s');
 // ---- Borrador de cambios en factores (Externo / Interno): nada se aplica hasta confirmar
@@ -905,6 +906,55 @@ function cicloCard(){
      <button class="btn keep" onclick="dialogReabrirCiclo()">Reabrir ciclo ${esc(CICLO)}…</button>`
     :`<button class="btn pri keep" onclick="dialogCerrarCiclo()">Cerrar ciclo ${esc(CICLO)}…</button>`}
   </div>`;
+}
+// ---- copias de seguridad del ciclo (se guardan en el servidor, junto a la base de datos)
+function copiasCard(){
+  return `<div class="card pad mt" style="max-width:980px"><h2>Copias de seguridad del ciclo ${esc(CICLO)}</h2>
+   <p class="mut" style="margin-top:0">Se guardan en el servidor donde está alojada la aplicación, junto a la base de datos. Cada copia contiene el ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos, revisión e imágenes). Al restaurar, el ciclo vuelve exactamente a ese estado.</p>
+   <div class="bar"><input id="bkNota" placeholder="Nota de la copia (opcional)" style="min-width:260px" class="keep"><button class="btn pri keep" onclick="crearCopia()">Crear copia ahora</button></div>
+   <div id="copias" class="mut">Cargando copias…</div></div>`;
+}
+const fechaHora=iso=>{const d=new Date(iso);return d.toLocaleDateString('es-ES')+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})};
+const kb=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+async function cargarCopias(){
+  const el=document.getElementById('copias');if(!el)return;
+  try{
+    const l=await api('GET',`api/backups?c=${CICLO}`);
+    if(!document.getElementById('copias'))return;
+    el.className='';
+    el.innerHTML=l.length?`<div class="scroll"><table><thead><tr><th>Fecha</th><th>Nota</th><th>Contenido</th><th>Tamaño</th><th></th></tr></thead><tbody>
+     ${l.map(b=>`<tr><td style="white-space:nowrap">${esc(fechaHora(b.creado))}</td><td>${b.auto?'<span class="tag">automática</span> ':''}${esc(b.nota||'')}</td>
+      <td class="mut">${b.resumen.factors} factores · ${b.resumen.risks} riesgos · ${b.resumen.opps} oportunidades · ${b.resumen.objetivos} objetivos${b.resumen.imgs?` · ${b.resumen.imgs} imágenes`:''}</td>
+      <td style="white-space:nowrap">${kb(b.bytes)}</td>
+      <td style="white-space:nowrap"><button class="btn sm" onclick="dialogRestaurar('${b.id}')">Restaurar</button> <button class="btn sm danger" onclick="eliminarCopia('${b.id}')">Eliminar</button></td></tr>`).join('')}
+     </tbody></table></div>${RO?'<p class="mut" style="margin-bottom:0">El ciclo está cerrado: para restaurar una copia hay que reabrirlo antes.</p>':''}`
+     :'<span class="mut">Todavía no hay copias de este ciclo.</span>';
+    if(RO)el.querySelectorAll('button').forEach(b=>b.disabled=true);
+  }catch(e){el.textContent='No se pudieron cargar las copias: '+e.message}
+}
+async function crearCopia(){
+  const n=document.getElementById('bkNota');
+  try{await api('POST',`api/backups?c=${CICLO}`,{nota:n?n.value:''});toast('Copia creada');if(n)n.value='';cargarCopias()}
+  catch(e){toast('NO SE HA CREADO LA COPIA: '+e.message,true)}
+}
+async function eliminarCopia(id){
+  if(!confirm('¿Eliminar definitivamente esta copia de seguridad?'))return;
+  try{await api('DELETE',`api/backups/${id}`);toast('Copia eliminada');cargarCopias()}
+  catch(e){toast('No se pudo eliminar: '+e.message,true)}
+}
+async function dialogRestaurar(id){
+  let b;try{b=(await api('GET',`api/backups?c=${CICLO}`)).find(x=>x.id===id)}catch(e){toast('No se pudo leer la copia: '+e.message,true);return}
+  if(!b){toast('La copia ya no existe',true);return}
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Restaurar la copia del ${esc(fechaHora(b.creado))}</h2>
+   <p>Se <b>sustituirá todo el contenido del ciclo ${esc(CICLO)}</b> por el de esta copia:</p>
+   <ul><li>${b.resumen.factors} factores · ${b.resumen.risks} riesgos · ${b.resumen.opps} oportunidades · ${b.resumen.objetivos} objetivos${b.resumen.imgs?` · ${b.resumen.imgs} imágenes`:''}</li>${b.nota?`<li>Nota: ${esc(b.nota)}</li>`:''}</ul>
+   <p class="mut">Antes de restaurar se guarda automáticamente una copia del estado actual, por si necesitas volver atrás.</p>
+   <div class="merr" id="merr"></div>
+   <div class="mbtn"><span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn danger" onclick="restaurarCopia('${id}')">Restaurar copia</button></div></div></div>`;
+}
+async function restaurarCopia(id){
+  try{const r=await api('POST',`api/backups/${id}/restaurar?c=${CICLO}`,{});cerrar();toast('Copia restaurada');await boot(CICLO)}
+  catch(e){document.getElementById('merr').textContent='No se pudo restaurar: '+e.message}
 }
 function dialogCerrarCiclo(){
   const sinEv=D.factors.filter(f=>!evaluado(f)).length, sinVal=D.risks.filter(r=>!r.P||!r.G).length;

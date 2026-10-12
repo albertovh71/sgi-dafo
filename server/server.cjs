@@ -19,6 +19,8 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const PUBLIC_DIR = process.env.PUBLIC_DIR || path.join(__dirname, '..', 'public');
 const MAX_JSON = 60 * 1024 * 1024; // incluye /api/import con imágenes de todos los ciclos
 const MAX_IMG = 12 * 1024 * 1024;
+const BK_DIR = process.env.BACKUP_DIR || path.join(process.env.DATA_DIR || path.join(__dirname, '..', 'data'), 'copias-ciclos');
+const BK_ID = /^ciclo-\d{4}-\d{8}-\d{6}(-[a-z0-9]{3})?$/;
 const ID = /^[A-Za-z0-9_.:-]{1,64}$/;
 const YEAR = /^\d{4}$/;
 
@@ -98,6 +100,60 @@ function snapshot(c) {
     if (out[r.col]) out[r.col].push({ ...JSON.parse(r.data), id: r.id });
   out.imgs = db.prepare('SELECT id, anio, key, nombre, w, h FROM imgs WHERE anio = ? ORDER BY n, rowid').all(c);
   return out;
+}
+
+// ---- copias de seguridad de un ciclo (ficheros en BACKUP_DIR, en el mismo servidor que la BD)
+fs.mkdirSync(BK_DIR, { recursive: true });
+function crearCopia(anio, nota, auto) {
+  const c = getCiclo.get(anio);
+  const snap = snapshot(anio); delete snap.imgs;
+  const imgs = db.prepare('SELECT id, anio, key, nombre, w, h, png FROM imgs WHERE anio = ? ORDER BY n, rowid').all(anio).map(r => ({ ...r, png: r.png.toString('base64') }));
+  const creado = now();
+  const ts = creado.replace(/[-:T]/g, '').slice(0, 14).replace(/^(\d{8})(\d{6})$/, '$1-$2');
+  let id = `ciclo-${anio}-${ts}`;
+  if (fs.existsSync(path.join(BK_DIR, id + '.json'))) id += '-' + crypto.randomBytes(2).toString('hex').slice(0, 3);
+  const doc = { tipo: 'sgi-ciclo', version: 1, anio, creado, nota: String(nota || '').slice(0, 200), auto: !!auto, estadoCiclo: c ? c.estado : null, items: snap, imgs };
+  const fichero = path.join(BK_DIR, id + '.json');
+  fs.writeFileSync(fichero + '.tmp', JSON.stringify(doc)); fs.renameSync(fichero + '.tmp', fichero);
+  const resumen = {}; for (const col of COLS) resumen[col] = (snap[col] || []).length; resumen.imgs = imgs.length;
+  const meta = { id, anio, creado, nota: doc.nota, auto: !!auto, estadoCiclo: doc.estadoCiclo, bytes: fs.statSync(fichero).size, resumen };
+  fs.writeFileSync(path.join(BK_DIR, id + '.meta.json'), JSON.stringify(meta));
+  return meta;
+}
+function listarCopias(anio) {
+  const out = [];
+  for (const f of fs.readdirSync(BK_DIR)) {
+    if (!f.endsWith('.meta.json')) continue;
+    try { const m = JSON.parse(fs.readFileSync(path.join(BK_DIR, f), 'utf8')); if (!anio || m.anio === anio) out.push(m); } catch { /* ignora ficheros dañados */ }
+  }
+  return out.sort((a, b) => b.creado.localeCompare(a.creado));
+}
+function leerCopia(id) {
+  if (!BK_ID.test(id)) throw fail(400, 'copia no válida');
+  const f = path.join(BK_DIR, id + '.json');
+  if (!fs.existsSync(f)) throw fail(404, 'la copia no existe');
+  let d; try { d = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { throw fail(400, 'la copia está dañada'); }
+  if (d.tipo !== 'sgi-ciclo' || !YEAR.test(String(d.anio)) || !d.items) throw fail(400, 'formato de copia no reconocido');
+  for (const col of COLS) for (const it of d.items[col] || []) {
+    if (!it || !ID.test(String(it.id || ''))) throw fail(400, `copia con elementos no válidos (${col})`);
+    const e = check(col, it); if (e) throw fail(400, `copia con datos no válidos: ${col}/${it.id}: ${e}`);
+  }
+  return d;
+}
+function restaurarCopia(id, anio) {
+  const d = leerCopia(id);
+  if (d.anio !== anio) throw fail(409, `La copia es del ciclo ${d.anio}, no del ${anio}`);
+  cicloAbierto(anio);
+  const previa = crearCopia(anio, `Automática antes de restaurar ${id}`, true); // red de seguridad
+  db.transaction(() => {
+    db.prepare('DELETE FROM items WHERE ciclo = ?').run(anio);
+    db.prepare('DELETE FROM imgs WHERE anio = ?').run(anio);
+    for (const col of COLS) for (const it of d.items[col] || []) { const { id: iid, ...rest } = it; upsert.run(anio, col, String(iid), JSON.stringify(rest), now()); }
+    let n = db.prepare('SELECT COALESCE(MAX(n),0) AS n FROM imgs').get().n;
+    for (const im of d.imgs || []) db.prepare('INSERT OR REPLACE INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)')
+      .run(String(im.id), anio, String(im.key), String(im.nombre || ''), +im.w, +im.h, Buffer.from(im.png, 'base64'), now(), ++n);
+  })();
+  return { restaurada: id, copiaPrevia: previa.id };
 }
 
 // ---- crear el ciclo siguiente a partir de uno cerrado
@@ -221,6 +277,26 @@ const server = http.createServer(async (req, res) => {
         if (!o) return send(res, 404, { error: 'el ciclo no existe' });
         if (o.estado !== 'abierto') db.prepare("UPDATE ciclos SET estado = 'abierto', cerrado = NULL WHERE anio = ?").run(seg[1]);
         return send(res, 200, getCiclo.get(seg[1]));
+      }
+      return send(res, 404, { error: 'no encontrado' });
+    }
+
+    // ---- copias de seguridad del ciclo
+    if (seg[0] === 'backups') {
+      if (m === 'GET' && seg.length === 1) { if (!YEAR.test(c || '')) return send(res, 400, { error: 'ciclo no indicado' }); return send(res, 200, listarCopias(c)); }
+      if (m === 'POST' && seg.length === 1) {
+        if (!YEAR.test(c || '') || !getCiclo.get(c)) return send(res, 404, { error: 'el ciclo no existe' });
+        let nota = ''; try { nota = (parseJson(await readBody(req)) || {}).nota || ''; } catch { /* sin cuerpo */ }
+        return send(res, 201, crearCopia(c, nota, false));
+      }
+      if (m === 'POST' && seg.length === 3 && seg[2] === 'restaurar') {
+        if (!YEAR.test(c || '')) return send(res, 400, { error: 'ciclo no indicado' });
+        return send(res, 200, restaurarCopia(seg[1], c));
+      }
+      if (m === 'DELETE' && seg.length === 2) {
+        if (!BK_ID.test(seg[1])) return send(res, 400, { error: 'copia no válida' });
+        for (const ext of ['.json', '.meta.json']) { const f = path.join(BK_DIR, seg[1] + ext); if (fs.existsSync(f)) fs.unlinkSync(f); }
+        return send(res, 200, { ok: true });
       }
       return send(res, 404, { error: 'no encontrado' });
     }
