@@ -36,7 +36,7 @@ function normAcc(x){ // datos antiguos: una sola acción en el propio registro �
   if(!Array.isArray(x.acciones)){const a={accion:x.accion||'',resp:x.resp||'',plazo:x.plazo||'',estado:x.estado||'',coment:x.coment||''};x.acciones=(a.accion||a.resp||a.plazo||a.coment)?[a]:[]}
   delete x.accion;delete x.resp;delete x.plazo;delete x.coment;delete x.proceso;delete x.factor;delete x.plazoRaw;return x}
 function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.estado==='Cerrada')?'Cerrada':(a.some(z=>z.estado)?'En curso':'')}
-const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>riskFids(r).includes(f.id)):D.opps.find(o=>o.fid===f.id);
+const fila0=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>riskFids(r).includes(f.id)):D.opps.find(o=>riskFids(o).includes(f.id));
 const valorado=x=>('P' in x)?(!!x.P&&!!x.G):(!!x.V&&!!x.R);
 // un factor está evaluado cuando tiene fila de riesgo/oportunidad Y está valorada (P y G, o V y R)
 // Riesgo: evaluado si P y G están valoradas. Oportunidad: evaluada si tiene V y R, o si no tiene ninguna acción
@@ -50,30 +50,39 @@ let FOCO=null;
 // Cada factor del DAFO tiene siempre su fila en Riesgos (D, A) u Oportunidades (F, O), sin valorar hasta que el usuario la evalúe.
 async function asegurarFilas(){
   const nuevos=[],cambios=[],borrar=[];if(RO)return 0;
-  const esRiesgo=f=>f.tipo==='D'||f.tipo==='A';
-  const vacia=r=>!r.P&&!r.G&&!(r.acciones||[]).length&&!(r.causa||'').trim()&&!(r.efecto||'').trim()&&!(r.just||'').trim();
-  // 1) filas automáticas vacías que duplican un riesgo ya existente de la misma frase (debilidad + amenaza) → se fusionan
-  for(const r of D.risks.slice()){
-    if(!/^R-/.test(r.id)||riskFids(r).length>1||!vacia(r))continue;
-    const f=fm[r.fid];if(!f)continue;
-    const gem=D.factors.find(x=>x.id!==f.id&&esRiesgo(x)&&claveTxt(x.texto)===claveTxt(f.texto)&&D.risks.some(y=>y!==r&&riskFids(y).includes(x.id)));
-    if(!gem)continue;
-    const base=D.risks.find(y=>y!==r&&riskFids(y).includes(gem.id));
-    base.fids=[...new Set([...riskFids(base),...riskFids(r)])];
-    D.risks=D.risks.filter(y=>y!==r);cambios.push(base);borrar.push(r);
+  // Dos familias de filas: riesgos (debilidad/amenaza) y oportunidades (fortaleza/oportunidad).
+  // Si la misma frase está en los dos cuadrantes de una familia, comparten UNA fila (fids).
+  const FAM=[
+    {col:'risks',tipos:['D','A'],lista:()=>D.risks,set:l=>{D.risks=l},
+     vacia:r=>!r.P&&!r.G&&!(r.acciones||[]).length&&!(r.causa||'').trim()&&!(r.efecto||'').trim()&&!(r.just||'').trim(),
+     nueva:f=>({id:'R-'+f.id,fid:f.id,fids:[f.id],causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null})},
+    {col:'opps',tipos:['F','O'],lista:()=>D.opps,set:l=>{D.opps=l},
+     vacia:o=>!o.V&&!o.R&&!(o.acciones||[]).length&&!(o.just||'').trim(),
+     nueva:f=>({id:'O-'+f.id,fid:f.id,fids:[f.id],V:null,R:null,VR:0,acciones:[],estado:'',just:''})}];
+  for(const F of FAM){
+    const pref=F.col==='risks'?/^R-/:/^O-/;
+    // 1) filas automáticas vacías que duplican la de una frase gemela → se fusionan
+    for(const r of F.lista().slice()){
+      if(!pref.test(r.id)||riskFids(r).length>1||!F.vacia(r))continue;
+      const f=fm[r.fid];if(!f)continue;
+      const gem=D.factors.find(x=>x.id!==f.id&&F.tipos.includes(x.tipo)&&claveTxt(x.texto)===claveTxt(f.texto)&&F.lista().some(y=>y!==r&&riskFids(y).includes(x.id)));
+      if(!gem)continue;
+      const base=F.lista().find(y=>y!==r&&riskFids(y).includes(gem.id));
+      base.fids=[...new Set([...riskFids(base),...riskFids(r)])];
+      F.set(F.lista().filter(y=>y!==r));cambios.push([F.col,base]);borrar.push([F.col,r]);
+    }
+    // 2) cada factor sin fila: si tiene gemelo se enlaza a su fila; si no, fila nueva
+    for(const f of D.factors){
+      if(!F.tipos.includes(f.tipo)||fila0(f))continue;
+      const gem=D.factors.find(x=>x.id!==f.id&&F.tipos.includes(x.tipo)&&claveTxt(x.texto)===claveTxt(f.texto)&&fila0(x));
+      if(gem){const base=fila0(gem);base.fids=[...new Set([...riskFids(base),f.id])];cambios.push([F.col,base]);continue}
+      const r=F.nueva(f);F.lista().push(r);nuevos.push([F.col,r]);
+    }
   }
-  // 2) cada factor sin fila: si tiene un gemelo (misma frase, debilidad/amenaza) se enlaza a su riesgo; si no, fila nueva
-  for(const f of D.factors){
-    if(fila0(f))continue;
-    if(esRiesgo(f)){
-      const gem=D.factors.find(x=>x.id!==f.id&&esRiesgo(x)&&claveTxt(x.texto)===claveTxt(f.texto)&&fila0(x));
-      if(gem){const base=fila0(gem);base.fids=[...new Set([...riskFids(base),f.id])];cambios.push(base);continue}
-      const r={id:'R-'+f.id,fid:f.id,fids:[f.id],causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null};D.risks.push(r);nuevos.push(['risks',r]);
-    }else{const o={id:'O-'+f.id,fid:f.id,V:null,R:null,VR:0,acciones:[],estado:'',just:''};D.opps.push(o);nuevos.push(['opps',o])}
-  }
-  for(const [col,x] of nuevos.concat([...new Set(cambios)].map(r=>['risks',r]))){try{await api('PUT',`api/${col}/${encodeURIComponent(x.id)}`,x)}catch(e){toast('NO SE HA GUARDADO una fila: '+e.message,true)}}
-  for(const r of borrar){try{await api('DELETE',`api/risks/${encodeURIComponent(r.id)}`)}catch(e){toast('No se pudo quitar una fila duplicada: '+e.message,true)}}
-  if(cambios.length)toast(`${new Set(cambios).size} riesgo(s) enlazado(s) a debilidad y amenaza con la misma frase: se evalúan una sola vez`);
+  const uniq=[];const vistos=new Set();for(const [c,x] of cambios){if(!vistos.has(c+x.id)){vistos.add(c+x.id);uniq.push([c,x])}}
+  for(const [col,x] of nuevos.concat(uniq)){try{await api('PUT',`api/${col}/${encodeURIComponent(x.id)}`,x)}catch(e){toast('NO SE HA GUARDADO una fila: '+e.message,true)}}
+  for(const [col,r] of borrar){try{await api('DELETE',`api/${col}/${encodeURIComponent(r.id)}`)}catch(e){toast('No se pudo quitar una fila duplicada: '+e.message,true)}}
+  if(uniq.length)toast(`${uniq.length} fila(s) enlazada(s) a dos cuadrantes con la misma frase: se evalúan una sola vez`);
   return nuevos.length;
 }
 function evaluar(id){const f=fm[id];
@@ -191,7 +200,7 @@ function fdToggle(id,w){if(RO)return;fdStart();const g=fdGrupo(id);if(!g.length)
   if(ex){if(g.length===1){toast('Un factor necesita al menos una opción. Para quitarlo usa la papelera.',true);return}FD=FD.filter(x=>x.id!==ex.id)}
   else FD.push({id:nid('F'),tipo:t,texto:g[0].texto,cat:g[0].cat,proceso:g[0].proceso||''});
   render()}
-function filasSoloDe(ids){return D.risks.filter(r=>riskFids(r).every(i=>ids.has(i))).length+D.opps.filter(o=>ids.has(o.fid)).length}
+function filasSoloDe(ids){return D.risks.filter(r=>riskFids(r).every(i=>ids.has(i))).length+D.opps.filter(o=>riskFids(o).every(i=>ids.has(i))).length}
 function fdBorrarFactor(id){fdStart();const g=fdGrupo(id);if(!g.length)return;
   const n=filasSoloDe(new Set(g.map(f=>f.id)));
   if(!confirm(`¿Quitar este factor del aspecto?${n?`\n\nTiene ${n} riesgo(s)/oportunidad(es) enlazados que también se eliminarán al aplicar los cambios.`:''}`))return;
@@ -209,8 +218,11 @@ function fdDiff(){
   for(const r of D.risks){const ids=riskFids(r),rest=ids.filter(i=>!del.has(i));
     if(!rest.length)rb.push(r);
     else if(rest.length<ids.length)rm.push({...r,fid:rest[0],fids:rest})}
-  const ob=D.opps.filter(o=>del.has(o.fid));
-  return {nuevos,borr,mod,rb,ob,rm};
+  const ob=[],om=[];
+  for(const o of D.opps){const ids=riskFids(o),rest=ids.filter(i=>!del.has(i));
+    if(!rest.length)ob.push(o);
+    else if(rest.length<ids.length)om.push({...o,fid:rest[0],fids:rest})}
+  return {nuevos,borr,mod,rb,ob,rm,om};
 }
 function fdDialog(next){
   const d=fdDiff(),vacios=FE.externo.length+FE.interno.length;
@@ -233,10 +245,11 @@ async function fdAplicar(){
   try{
     for(const f of d.nuevos.concat(d.mod))await api('PUT',`api/factors/${encodeURIComponent(f.id)}`,f);
     for(const r of d.rm)await api('PUT',`api/risks/${encodeURIComponent(r.id)}`,r);
+    for(const o of d.om)await api('PUT',`api/opps/${encodeURIComponent(o.id)}`,o);
     for(const r of d.rb)await api('DELETE',`api/risks/${encodeURIComponent(r.id)}`);
     for(const o of d.ob)await api('DELETE',`api/opps/${encodeURIComponent(o.id)}`);
     for(const f of d.borr)await api('DELETE',`api/factors/${encodeURIComponent(f.id)}`);
-    D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r)).map(r=>d.rm.find(x=>x.id===r.id)||r);D.opps=D.opps.filter(o=>!d.ob.includes(o));
+    D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r)).map(r=>d.rm.find(x=>x.id===r.id)||r);D.opps=D.opps.filter(o=>!d.ob.includes(o)).map(o=>d.om.find(x=>x.id===o.id)||o);
     FD=null;FE={externo:[],interno:[]};reindex();const nf=await asegurarFilas();cerrar();toast(nf?`Cambios aplicados · ${nf} fila(s) nuevas en Riesgos/Oportunidades`:'Cambios aplicados');n?n():render();
   }catch(e){FD=null;FE={externo:[],interno:[]};cerrar();toast('NO SE HAN APLICADO TODOS LOS CAMBIOS: '+e.message+'. Se han recargado los datos.',true);await boot()}
 }
@@ -439,7 +452,7 @@ function oport(){
     return A.map((a,j)=>{
       const first=j===0, last=j===n-1;
       const add=last?`<div><button class="ed" onclick="editar('opp','${o.id}',{addAcc:1})">+ acción</button></div>`:'';
-      const l0=first?`<td${rs}><b>${esc(rt(o))}</b> <button class="ed" title="Editar" onclick="editar('opp','${o.id}')">✎</button></td>`:'';
+      const l0=first?`<td${rs}><b>${esc(rt(o))}</b> <button class="ed" title="Editar" onclick="editar('opp','${o.id}')">✎</button>${riskFids(o).length>1?`<div class="meta" title="La misma frase está como fortaleza y como oportunidad en el DAFO: se evalúa una sola vez">${riskFids(o).map(i=>fm[i]?`<span class="tag">${SING[fm[i].tipo]} · ${esc(fm[i].cat||'sin aspecto')}</span>`:'').join('')}</div>`:''}</td>`:'';
       const falta=(requiereO(o)&&!tieneAcc(o)&&!o.just)?`<div class="todo" style="padding:2px 6px">falta acción o justificación (V×R = 9)</div>`:'';
       const just=(requiereO(o)&&!tieneAcc(o))?`<input class="j" placeholder="Justificación…" value="${esc(o.just||'')}" onchange="setO(${i},'just',this.value)">`:'';
       const ac=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&!tieneAcc(o)?just:''}${add}</td>`:`<td>${falta||'<span class="mut">—</span>'}${just}${add}</td>`;
