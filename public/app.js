@@ -40,11 +40,12 @@ const evaluado=f=>{const x=fila0(f);return x&&valorado(x)?x:null};
 function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=(r.P&&r.G)?r.P*r.G:null;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
 function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
 function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
+let FOCO=null;
 function evaluar(id){const f=fm[id];
   const ya=fila0(f);
-  if(ya){S.tab=(f.tipo==='D'||f.tipo==='A')?'riesgos':'oport';S.estado='todos';S.proceso='';render();return}
-  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
-  else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);S.tab='oport'}
+  if(ya){FOCO=ya.id;S.tab=(f.tipo==='D'||f.tipo==='A')?'riesgos':'oport';S.estado='todos';S.proceso='';render();return}
+  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);FOCO=r.id;S.tab='riesgos'}
+  else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);FOCO=o.id;S.tab='oport'}
   S.estado='todos';S.proceso='';render()}
 
 const TABS=[['general','Datos generales'],['partes','Partes'],['externo','Externo'],['interno','Interno'],['dafo','DAFO'],['riesgos','Riesgos'],['oport','Oportunidades'],null,['procesos','Procesos'],['objetivos','Objetivos'],['revision','Revisión dirección'],null,['flujo','Flujo'],['criterios','Criterios'],['coherencia','Coherencia']];
@@ -52,6 +53,11 @@ function render(){
   document.getElementById('tabs').innerHTML=TABS.map(t=>t?`<button class="${S.tab===t[0]?'on':''}" onclick="irTab('${t[0]}')">${t[1]}</button>`:'<span class="sep"></span>').join('');
   document.getElementById('wrap').className='wrap'+(S.tab==='riesgos'||S.tab==='oport'?' wide':'');
   document.getElementById('view').innerHTML=VIEWS[S.tab]();
+  if(FOCO){const id=FOCO;FOCO=null;
+    const rows=[...document.querySelectorAll('#view tr[data-rid]')].filter(r=>r.dataset.rid===id);
+    if(rows.length){const tb=rows[0].closest('tbody');if(tb)tb.classList.remove('shut');
+      rows[0].scrollIntoView({block:'center'});
+      rows.forEach(r=>r.classList.add('flash'));setTimeout(()=>rows.forEach(r=>r.classList.remove('flash')),1800)}}
 }
 function matriz3(titulo,ejeX,ejeY,items,kx,ky){
   let h=`<div class="heat"><span></span>${[1,2,3].map(i=>`<span style="text-align:center">${ejeX}${i}</span>`).join('')}`;
@@ -268,7 +274,7 @@ function partes(){
 function porProc(l,key,cols,fn,abiertoFn){
   const orden=[...Object.values(PROCS),'(sin proceso)'];
   const gs=orden.map(p=>[p,l.filter(x=>proc(key(x))===p)]).filter(([,v])=>v.length);
-  return gs.map(([p,v])=>`<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="${cols}"><span class="chev"></span>${esc(p)} <span class="mut" style="font-weight:400">· ${v.length}${abiertoFn?` · ${v.filter(abiertoFn).length} abiertos`:''}</span></td></tr>${v.map(x=>fn(x).replace(/<tr>/g,'<tr class="it">')).join('')}</tbody>`).join('')||`<tbody><tr><td colspan="${cols}" class="mut">Sin elementos con este filtro</td></tr></tbody>`;
+  return gs.map(([p,v])=>`<tbody class="pl"><tr class="cat" onclick="this.parentNode.classList.toggle('shut')"><td colspan="${cols}"><span class="chev"></span>${esc(p)} <span class="mut" style="font-weight:400">· ${v.length}${abiertoFn?` · ${v.filter(abiertoFn).length} abiertos`:''}</span></td></tr>${v.map(x=>fn(x).replace(/<tr(?=[ >])/g,'<tr class="it"')).join('')}</tbody>`).join('')||`<tbody><tr><td colspan="${cols}" class="mut">Sin elementos con este filtro</td></tr></tbody>`;
 }
 function ordenSel(){return `<select onchange="S.orden=this.value;render()"><option value="excel" ${S.orden==='excel'?'selected':''}>Orden original</option><option value="R" ${S.orden==='R'?'selected':''}>Mayor R primero</option></select>`}
 function riesgos(){
@@ -297,7 +303,7 @@ function riesgos(){
         :`<td>${falta||'<span class="mut">—</span>'}${requiere(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td></td><td></td><td>${sel(i,'estado',r.estado,ESTADOS)}</td><td></td>`;
       const right=first?`<td${rs}>P' ${sel(i,'Pr',r.Pr,['',1,2,3])}<br>G' ${sel(i,'Gr',r.Gr,['',1,2,3])} ${r.Rr!=null?`<span class="pill ${lvl(r.Rr)}">${r.Rr}</span>`:''}
         ${cierreSinRes?'<div class="todo" style="padding:2px 6px;margin-top:4px">cerrado sin residual</div>':''}</td><td${rs}>${regla}</td>`:'';
-      return `<tr>${left}${mid}${right}</tr>`}).join('');
+      return `<tr data-rid="${r.id}">${left}${mid}${right}</tr>`}).join('');
   };
   return `<div class="kpis">
    <div class="card kpi"><b>${D.risks.length}</b><span>riesgos</span></div>
@@ -334,7 +340,7 @@ function oport(){
       const vr=first?`<td${rs}>${sel(i,'V',o.V,['',1,2,3])}</td><td${rs}>${sel(i,'R',o.R,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(o.VR)}">${o.VR??0}</span></td>`:'';
       const rest=a?`<td>${esc(a.resp)}</td><td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td><td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
         :`<td></td><td></td><td>${sel(i,'estado',o.estado,ESTADOS)}</td><td></td>`;
-      return `<tr>${l0}${ac}${vr}${rest}</tr>`}).join('');
+      return `<tr data-rid="${o.id}">${l0}${ac}${vr}${rest}</tr>`}).join('');
   };
   return `<div class="kpis">
    <div class="card kpi"><b>${D.opps.length}</b><span>oportunidades</span></div>
