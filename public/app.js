@@ -17,6 +17,7 @@ const anios=()=>[...new Set(D.objs.map(o=>o.anio))].sort().reverse();
 const ESTADOS=['','En curso','Cerrada'];
 const abierto=e=>e!=='Cerrada';
 const requiere=r=>(r.R||0)>=4||r.G===3;
+const requiereO=o=>(o.VR||0)>=9;
 const procSel=()=>`<select onchange="S.proceso=this.value;render()"><option value="">Todos los procesos</option>${Object.values(PROCS).map(p=>`<option ${S.proceso===p?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
 const okProc=p=>!S.proceso||proc(p)===S.proceso;
 const fecha=f=>/^\d{4}-\d\d(-\d\d)?$/.test(f)?f.split('-').reverse().join('/'):f;
@@ -34,7 +35,7 @@ function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.e
 const evaluado=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
 
 function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=r.P*r.G;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
-function setO(i,f,v){const o=D.opps[i];o[f]=f==='estado'?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
+function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
 function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
 function evaluar(id){const f=fm[id];
   if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
@@ -211,6 +212,7 @@ function criterios(){
   </div>
   <div class="card pad"><h2>Oportunidades: Viabilidad × Rentabilidad</h2>
    <p class="mut" style="margin-top:0">Escala 1–3: Baja = 1, Media = 2, Alta = 3. VR = V × R.</p>
+   <div class="rule"><b>V×R = 9</b> → debe tener acción, o una justificación escrita de por qué no se aprovecha. Por debajo de 9 la acción es opcional.</div>
    <h3 class="mt">Semáforo que ya usas</h3>
    <p><span class="pill g">1–2 Bajo</span> <span class="pill y">3–5 Medio</span> <span class="pill r">6–9 Alto</span></p>
    <h3 class="mt">Matriz P×G</h3>
@@ -283,7 +285,7 @@ function riesgos(){
       const add=last?`<div><button class="ed" onclick="editar('risk','${r.id}',{addAcc:1})">+ acción</button></div>`:'';
       const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
         <td${rs}>${sel(i,'P',r.P,[1,2,3])}</td><td${rs}>${sel(i,'G',r.G,[1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R}</span></td>`:'';
-      const mid=a?`<td>${nl(a.accion)||'<span class="mut">—</span>'}${add}</td><td>${esc(a.resp)}</td>
+      const mid=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&requiere(r)&&!tieneAcc(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td>${esc(a.resp)}</td>
         <td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td>
         <td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
         :`<td>${falta||'<span class="mut">—</span>'}${requiere(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td></td><td></td><td>${sel(i,'estado',r.estado,ESTADOS)}</td><td></td>`;
@@ -312,13 +314,16 @@ function oport(){
   const sel=(i,f,cur,opts)=>`<select onchange="setO(${i},'${f}',this.value)">${opts.map(o=>`<option value="${o}" ${String(cur??'')===String(o)?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
   const selA=(i,j,cur)=>`<select onchange="setAcc('opps',${i},${j},'estado',this.value)">${ESTADOS.map(o=>`<option value="${o}" ${(cur||'')===o?'selected':''}>${o===''?'–':o}</option>`).join('')}</select>`;
   const sinVal=D.opps.filter(o=>!o.V||!o.R).length, sinEst=D.opps.filter(o=>!o.estado).length;
+  const sinAccO=D.opps.filter(o=>requiereO(o)&&!tieneAcc(o)&&!o.just).length;
   const fila=([o,i])=>{
     const A=accs(o).length?accs(o):[null], n=A.length, rs=n>1?` rowspan="${n}"`:'';
     return A.map((a,j)=>{
       const first=j===0, last=j===n-1;
       const add=last?`<div><button class="ed" onclick="editar('opp','${o.id}',{addAcc:1})">+ acción</button></div>`:'';
       const l0=first?`<td${rs}><b>${esc(rt(o))}</b> <button class="ed" title="Editar" onclick="editar('opp','${o.id}')">✎</button></td>`:'';
-      const ac=a?`<td>${nl(a.accion)||'<span class="mut">—</span>'}${add}</td>`:`<td><span class="mut">—</span>${add}</td>`;
+      const falta=(requiereO(o)&&!tieneAcc(o)&&!o.just)?`<div class="todo" style="padding:2px 6px">falta acción o justificación (V×R = 9)</div>`:'';
+      const just=(requiereO(o)&&!tieneAcc(o))?`<input class="j" placeholder="Justificación…" value="${esc(o.just||'')}" onchange="setO(${i},'just',this.value)">`:'';
+      const ac=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&!tieneAcc(o)?just:''}${add}</td>`:`<td>${falta||'<span class="mut">—</span>'}${just}${add}</td>`;
       const vr=first?`<td${rs}>${sel(i,'V',o.V,['',1,2,3])}</td><td${rs}>${sel(i,'R',o.R,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(o.VR)}">${o.VR??0}</span></td>`:'';
       const rest=a?`<td>${esc(a.resp)}</td><td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td><td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
         :`<td></td><td></td><td>${sel(i,'estado',o.estado,ESTADOS)}</td><td></td>`;
@@ -329,7 +334,8 @@ function oport(){
    <div class="card kpi"><b>${D.opps.filter(o=>o.estado==='En curso').length}</b><span>en curso</span></div>
    <div class="card kpi"><b>${D.opps.filter(o=>o.estado==='Cerrada').length}</b><span>cerradas</span></div>
    <div class="card kpi"><b class="${sinEst?'warn':''}">${sinEst}</b><span>sin estado</span></div>
-   <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>sin valorar (V o R vacíos)</span></div></div>
+   <div class="card kpi"><b class="${sinVal?'warn':''}">${sinVal}</b><span>sin valorar (V o R vacíos)</span></div>
+   <div class="card kpi"><b class="${sinAccO?'warn':''}">${sinAccO}</b><span>V×R = 9 sin acción ni justificación</span></div></div>
   <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('opp',null)">+ Añadir oportunidad</button></div>
   ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[17,22,6.5,7.5,5,9,6,7,20].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de oportunidad</th><th>Acciones</th><th>V<small>viabilidad</small></th><th>R<small>rentabilidad</small></th><th>V*R</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th></tr></thead>
@@ -550,6 +556,7 @@ function coherencia(){
   const sinEv=D.factors.filter(f=>!evaluado(f));
   const g3=D.risks.filter(r=>r.G===3&&r.R<4&&!tieneAcc(r)&&!r.just);
   const sinAcc=D.risks.filter(r=>requiere(r)&&!tieneAcc(r)&&!r.just);
+  const sinAccO=D.opps.filter(o=>requiereO(o)&&!tieneAcc(o)&&!o.just);
   const sinEst=D.risks.filter(r=>!r.estado);
   const cerSin=D.risks.filter(r=>r.estado==='Cerrada'&&r.Rr==null);
   const venc=[];D.risks.concat(D.opps).forEach(x=>accs(x).filter(vencidoA).forEach(a=>venc.push([x,a])));
@@ -557,10 +564,11 @@ function coherencia(){
   const objPend=D.objs.filter(o=>!o.objetivo);
   const bloque=(t,items,expl)=>`<div class="card pad mt"><h2>${t} <span class="pill ${items.length?'y':'g'}">${items.length}</span></h2><p class="mut" style="margin-top:0">${expl}</p>${items.length?`<ul class="plain">${items.map(i=>`<li>${i}</li>`).join('')}</ul>`:''}</div>`;
   const k=(n,t)=>`<div class="card kpi"><b class="${n?'warn':''}">${n}</b><span>${t}</span></div>`;
-  return `<div class="kpis">${k(sinEv.length,'factores sin evaluar')}${k(sinAcc.length,'exigen acción y no la tienen')}${k(sinEst.length,'riesgos sin estado')}${k(cerSin.length,'cerrados sin residual')}${k(venc.length,'con plazo vencido')}</div>
+  return `<div class="kpis">${k(sinEv.length,'factores sin evaluar')}${k(sinAcc.length+sinAccO.length,'exigen acción y no la tienen')}${k(sinEst.length,'riesgos sin estado')}${k(cerSin.length,'cerrados sin residual')}${k(venc.length,'con plazo vencido')}</div>
   <p class="mut" style="margin-top:0">Comprobaciones automáticas de que el análisis está completo y es coherente.</p>
   ${bloque('Factores del DAFO sin evaluar',sinEv.map(f=>`${esc(f.texto)} <span class="tag">${TIPOS[f.tipo].n.slice(0,-1)}</span> <span class="tag">${esc(proc(f.proceso))}</span>`),'Están en el DAFO pero no tienen fila en Riesgos u Oportunidades.')}
   ${bloque('Riesgos que exigen acción y no la tienen',sinAcc.map(r=>`${esc(rt(r))}: P${r.P} × G${r.G} = ${r.R}`),'R ≥ 4, o G = 3: hace falta una acción o una justificación escrita.')}
+  ${bloque('Oportunidades con V×R = 9 sin acción ni justificación',sinAccO.map(o=>`${esc(rt(o))}: V${o.V} × R${o.R} = ${o.VR}`),'Una oportunidad de máxima viabilidad y rentabilidad debe tener acción, o una justificación escrita de por qué no se aprovecha.')}
   ${bloque('Riesgos sin estado',sinEst.map(r=>esc(rt(r))),'No se sabe si están abiertos o cerrados.')}
   ${bloque('Riesgos cerrados sin riesgo residual valorado',cerSin.map(r=>esc(rt(r))),'Cerrar exige valorar P y G residuales para demostrar la eficacia de la acción.')}
   ${bloque('Acciones con plazo vencido',venc.map(([x,a])=>`${esc(rt(x))} — ${esc((a.accion||'').split('\n')[0])} · ${esc(a.resp||'sin responsable')} · ${esc(fecha(a.plazo))}`),'Siguen abiertas y su plazo ya pasó.')}
@@ -589,11 +597,13 @@ const KIND={
     campos:[['tipo','Tipo','sel',[['externa','Externo'],['interna','Interno']]],['nombre','Grupo de interés','text'],['necesidades','Necesidades','area'],['expectativas','Expectativas','area'],['requisitos','Requisitos para el Sistema','area']],
     req:o=>o.nombre.trim()?'':'Falta el nombre del grupo'},
   risk:{col:'risks',list:()=>D.risks,titulo:'Riesgo',pref:'R',acc:true,nuevo:()=>({fid:'',causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null}),
-    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','P · Probabilidad','sel',NIV.slice(1)],['G','G · Gravedad','sel',NIV.slice(1)],['just','Justificación (G=3 o R≥4 sin acción)','area'],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
+    span:{fid:4,causa:2,efecto:2,P:1,G:1,Pr:1,Gr:1,just:3,estado:1},
+    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','P · Probabilidad','sel',NIV.slice(1)],['G','G · Gravedad','sel',NIV.slice(1)],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV],['just','Justificación (G=3 o R≥4 sin acción)','area'],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
     req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
     post:o=>{o.R=o.P*o.G;o.Rr=o.Pr&&o.Gr?o.Pr*o.Gr:null;recalc(o)}},
-  opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',acc:true,nuevo:()=>({fid:'',V:null,R:null,VR:0,acciones:[],estado:''}),
-    campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
+  opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',acc:true,nuevo:()=>({fid:'',V:null,R:null,VR:0,acciones:[],estado:'',just:''}),
+    span:{fid:4,V:1,R:1,estado:2,just:4},
+    campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST],['just','Justificación (V×R = 9 sin acción)','area']],
     req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
     post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
   obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:S.ano||String(new Date().getFullYear()),origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
@@ -664,20 +674,21 @@ function pintarModal(){
     else if(t==='sel')ctl=`<select id="${id_}">${x.map(([val,txt])=>`<option value="${val}" ${String(v??'')===String(val)?'selected':''}>${esc(txt)}</option>`).join('')}</select>`;
     else if(t==='fac')ctl=`<select id="${id_}"><option value="">— elige un factor</option>${D.factors.filter(f=>x.includes(f.tipo)).map(f=>`<option value="${f.id}" ${v===f.id?'selected':''}>${esc(f.texto.slice(0,110))}</option>`).join('')}</select>`;
     else if(t==='chk')return `<label class="fl chk"><input id="${id_}" type="checkbox" ${v?'checked':''}> <span>${chkL[+n.slice(1)]}</span></label>`;
-    return `<label class="fl"><span>${l}</span>${ctl}</label>`};
+    const sp=K.span&&K.span[n];
+    return `<label class="fl${sp?` s${sp}`:''}"><span>${l}</span>${ctl}</label>`};
   const accHtml=()=>!K.acc?'':`<h3 class="acch">Acciones <span class="mut" style="font-weight:400">(puedes añadir todas las que necesites)</span></h3>
-    ${(o.acciones||[]).map((a,j)=>`<div class="accbox"><div class="acchead"><b>Acción ${j+1}</b><button class="ed" onclick="accQuitar(${j})">Quitar</button></div><div class="mform">
-      <label class="fl full"><span>Acción</span><textarea data-a="${j}" data-k="accion" rows="2">${esc(a.accion)}</textarea></label>
+    ${(o.acciones||[]).map((a,j)=>`<div class="accbox"><div class="acchead"><b>Acción ${j+1}</b><button class="ed" onclick="accQuitar(${j})">Quitar</button></div><div class="accrow">
+      <label class="fl"><span>Acción</span><textarea data-a="${j}" data-k="accion" rows="2">${esc(a.accion)}</textarea></label>
       <label class="fl"><span>Responsable</span><input data-a="${j}" data-k="resp" value="${esc(a.resp)}"></label>
       <label class="fl"><span>Plazo</span><input type="month" data-a="${j}" data-k="plazo" value="${esc(a.plazo)}"></label>
       <label class="fl"><span>Estado</span><select data-a="${j}" data-k="estado">${SEL_EST.map(([v,t])=>`<option value="${v}" ${(a.estado||'')===v?'selected':''}>${t}</option>`).join('')}</select></label>
-      <label class="fl full"><span>Comentarios</span><textarea data-a="${j}" data-k="coment" rows="2">${esc(a.coment)}</textarea></label></div></div>`).join('')}
+      <label class="fl"><span>Comentarios</span><textarea data-a="${j}" data-k="coment" rows="2">${esc(a.coment)}</textarea></label></div></div>`).join('')}
     <button class="btn" onclick="accAnadir()">+ Añadir acción</button>`;
   document.getElementById('modal').innerHTML=`<div class="mbg" onclick="if(event.target===this)cerrar()"><div class="mbox ${K.acc?'wide':''}" role="dialog">
     <h2>${M.id?'Editar':'Nuevo'} · ${K.titulo}</h2>
     <datalist id="dl_ori">${[...new Set(D.objs.map(f=>f.origen).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
     ${M.kind==='fdraft'?`<p class="mut" style="margin:0 0 8px">Aspecto: <b>${esc(M.pre.cat)}</b></p>`:''}
-    <div class="mform">${K.campos.map(fld).join('')}</div>
+    <div class="mform ${K.acc?'w4':''}">${K.campos.map(fld).join('')}</div>
     ${accHtml()}
     <div class="merr" id="merr"></div>
     <div class="mbtn">${M.id&&!K.noDel&&M.kind!=='meta'?'<button class="btn danger" onclick="borrar()">Eliminar</button>':''}<span style="flex:1"></span><button class="btn" onclick="cerrar()">Cancelar</button><button class="btn pri" onclick="aceptar()">${K.local?'Aceptar':'Guardar'}</button></div>
