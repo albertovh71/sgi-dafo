@@ -34,11 +34,11 @@ function normAcc(x){ // datos antiguos: una sola acción en el propio registro �
 function recalc(x){const a=accs(x); if(!a.length)return; x.estado=a.every(z=>z.estado==='Cerrada')?'Cerrada':(a.some(z=>z.estado)?'En curso':'')}
 const evaluado=f=>(f.tipo==='D'||f.tipo==='A')?D.risks.find(r=>r.fid===f.id):D.opps.find(o=>o.fid===f.id);
 
-function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=r.P*r.G;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
+function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='P'||f==='G')r.R=(r.P&&r.G)?r.P*r.G:null;if(f==='Pr'||f==='Gr')r.Rr=r.Pr&&r.Gr?r.Pr*r.Gr:null;guardar('risks',r);render()}
 function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
 function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
 function evaluar(id){const f=fm[id];
-  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
+  if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);S.tab='riesgos'}
   else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);S.tab='oport'}
   S.estado='todos';S.proceso='';render()}
 
@@ -277,14 +277,15 @@ function riesgos(){
   const fila=([r,i])=>{
     const A=accs(r).length?accs(r):[null], n=A.length, rs=n>1?` rowspan="${n}"`:'';
     const g3=r.G===3&&r.R<4;
-    const regla=g3?`<span class="amb">G=3: acción o justificar</span>`:(requiere(r)?`<span class="amb">R≥4: acción</span>`:'<span class="mut">vigilar</span>');
+    const sinVal=!r.P||!r.G;
+    const regla=sinVal?`<span class="todo" style="padding:2px 6px">valora P y G</span>`:g3?`<span class="amb">G=3: acción o justificar</span>`:(requiere(r)?`<span class="amb">R≥4: acción</span>`:'<span class="mut">vigilar</span>');
     const falta=(requiere(r)&&!tieneAcc(r)&&!r.just)?`<div class="todo" style="padding:2px 6px">falta acción${g3?' o justificación':''}</div>`:'';
     const cierreSinRes=r.estado==='Cerrada'&&r.Rr==null;
     return A.map((a,j)=>{
       const first=j===0, last=j===n-1;
       const add=last?`<div><button class="ed" onclick="editar('risk','${r.id}',{addAcc:1})">+ acción</button></div>`:'';
       const left=first?`<td${rs}><b>${esc(rt(r))}</b> <button class="ed" title="Editar" onclick="editar('risk','${r.id}')">✎</button></td><td${rs}>${esc(r.causa)}</td><td${rs}>${esc(r.efecto)}</td>
-        <td${rs}>${sel(i,'P',r.P,[1,2,3])}</td><td${rs}>${sel(i,'G',r.G,[1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R}</span></td>`:'';
+        <td${rs}>${sel(i,'P',r.P,['',1,2,3])}</td><td${rs}>${sel(i,'G',r.G,['',1,2,3])}</td><td${rs}><span class="pill ${lvl(r.R)}">${r.R??'—'}</span></td>`:'';
       const mid=a?`<td>${nl(a.accion)||(first?falta:'')||'<span class="mut">—</span>'}${first&&requiere(r)&&!tieneAcc(r)?`<input class="j" placeholder="Justificación…" value="${esc(r.just||'')}" onchange="setR(${i},'just',this.value)">`:''}${add}</td><td>${esc(a.resp)}</td>
         <td style="color:${vencidoA(a)?'var(--bad)':''}">${esc(fecha(a.plazo))}${vencidoA(a)?'<div style="font-size:11px">vencida</div>':''}</td>
         <td>${selA(i,j,a.estado)}</td><td style="color:var(--muted)">${nl(a.coment)}</td>`
@@ -298,7 +299,8 @@ function riesgos(){
    <div class="card kpi"><b>${D.risks.filter(r=>r.estado==='En curso').length}</b><span>en curso</span></div>
    <div class="card kpi"><b>${D.risks.filter(r=>r.estado==='Cerrada').length}</b><span>cerrados</span></div>
    <div class="card kpi"><b class="${D.risks.filter(r=>!r.estado).length?'warn':''}">${D.risks.filter(r=>!r.estado).length}</b><span>sin estado</span></div>
-   <div class="card kpi"><b class="${sinAccion?'warn':''}">${sinAccion}</b><span>exigen acción y no la tienen</span></div></div>
+   <div class="card kpi"><b class="${sinAccion?'warn':''}">${sinAccion}</b><span>exigen acción y no la tienen</span></div>
+   <div class="card kpi"><b class="${D.risks.filter(r=>!r.P||!r.G).length?'warn':''}">${D.risks.filter(r=>!r.P||!r.G).length}</b><span>sin valorar (P o G vacíos)</span></div></div>
   <div class="bar"><select onchange="S.estado=this.value;render()">${['abiertos','En curso','Cerrada','todos'].map(e=>`<option ${S.estado===e?'selected':''}>${e}</option>`).join('')}</select>${procSel()}${ordenSel()}
    <button class="btn" onclick="editar('risk',null)">+ Añadir riesgo</button></div>
   ${plBar}<div class="card scroll"><table class="asp fit"><colgroup>${[11.5,9,8,5.5,5.5,3.5,14,7,5,6.5,11.5,6,6.5].map(w=>`<col style="width:${w}%">`).join('')}</colgroup><thead><tr><th>Factor de riesgo</th><th>Causa</th><th>Efecto</th><th>P<small>probabilidad</small></th><th>G<small>gravedad</small></th><th>R</th><th>Acción</th><th>Responsable</th><th>Plazo</th><th>Estado</th><th>Comentarios</th><th>Residual P'×G' <span class="nuevo">nuevo</span></th><th>Regla <span class="nuevo">nuevo</span></th></tr></thead>
@@ -413,7 +415,7 @@ function revSecs(){
    aut('par','Necesidades y expectativas de las partes interesadas',[P(`${D.parties.length} grupos de interés (${D.parties.filter(p=>p.tipo==='externa').length} externos, ${D.parties.filter(p=>p.tipo==='interna').length} internos):`),T(['Grupo de interés','Necesidades','Expectativas'],D.parties.map(p=>[p.nombre,p.necesidades||'',p.expectativas||'']))]),
    aut('ryo','Riesgos y oportunidades',[P(`Riesgos: ${D.risks.length} (${ab.length} abiertos, ${cer.length} cerrados). Abiertos con R alto (6–9): ${ab.filter(r=>r.R>=6).length}.`),P(`Oportunidades: ${D.opps.length} (${D.opps.filter(o=>o.V).length} valoradas, ${ocer.length} cerradas).`)]),
    man('asp','Aspectos ambientales significativos','Viene de la evaluación de aspectos ambientales (fuera de este módulo).'),
-   aut('efi','Eficacia de las acciones para abordar riesgos y oportunidades',[P(`${cer.length} riesgos cerrados; ${cer.filter(r=>r.Rr!=null).length} con riesgo residual valorado.`),T(['Riesgo','R inicial','R residual','Comentario'],cer.map(r=>[rt(r),String(r.R),r.Rr!=null?String(r.Rr):'sin valorar',accs(r).map(a=>a.coment).filter(Boolean).join(' / ').slice(0,160)]))]),
+   aut('efi','Eficacia de las acciones para abordar riesgos y oportunidades',[P(`${cer.length} riesgos cerrados; ${cer.filter(r=>r.Rr!=null).length} con riesgo residual valorado.`),T(['Riesgo','R inicial','R residual','Comentario'],cer.map(r=>[rt(r),r.R!=null?String(r.R):'—',r.Rr!=null?String(r.Rr):'sin valorar',accs(r).map(a=>a.coment).filter(Boolean).join(' / ').slice(0,160)]))]),
    man('con','Conclusiones'),man('conv','Conveniencia, adecuación y eficacia continuas del sistema'),man('mej','Oportunidades de mejora / necesidad de cambios')];
 }
 const revVacia=s=>!revT(s.k).trim()&&!revI(s.k).length;
@@ -558,6 +560,7 @@ function coherencia(){
   const sinAcc=D.risks.filter(r=>requiere(r)&&!tieneAcc(r)&&!r.just);
   const sinAccO=D.opps.filter(o=>requiereO(o)&&!tieneAcc(o)&&!o.just);
   const sinEst=D.risks.filter(r=>!r.estado);
+  const sinValR=D.risks.filter(r=>!r.P||!r.G);
   const cerSin=D.risks.filter(r=>r.estado==='Cerrada'&&r.Rr==null);
   const venc=[];D.risks.concat(D.opps).forEach(x=>accs(x).filter(vencidoA).forEach(a=>venc.push([x,a])));
   const dup=[...new Set(D.factors.map(f=>f.texto))].filter(t=>D.factors.filter(f=>f.texto===t).length>1);
@@ -569,6 +572,7 @@ function coherencia(){
   ${bloque('Factores del DAFO sin evaluar',sinEv.map(f=>`${esc(f.texto)} <span class="tag">${TIPOS[f.tipo].n.slice(0,-1)}</span> <span class="tag">${esc(proc(f.proceso))}</span>`),'Están en el DAFO pero no tienen fila en Riesgos u Oportunidades.')}
   ${bloque('Riesgos que exigen acción y no la tienen',sinAcc.map(r=>`${esc(rt(r))}: P${r.P} × G${r.G} = ${r.R}`),'R ≥ 4, o G = 3: hace falta una acción o una justificación escrita.')}
   ${bloque('Oportunidades con V×R = 9 sin acción ni justificación',sinAccO.map(o=>`${esc(rt(o))}: V${o.V} × R${o.R} = ${o.VR}`),'Una oportunidad de máxima viabilidad y rentabilidad debe tener acción, o una justificación escrita de por qué no se aprovecha.')}
+  ${bloque('Riesgos sin valorar (P o G vacíos)',sinValR.map(r=>esc(rt(r))),'Pendientes de que valores su probabilidad y gravedad.')}
   ${bloque('Riesgos sin estado',sinEst.map(r=>esc(rt(r))),'No se sabe si están abiertos o cerrados.')}
   ${bloque('Riesgos cerrados sin riesgo residual valorado',cerSin.map(r=>esc(rt(r))),'Cerrar exige valorar P y G residuales para demostrar la eficacia de la acción.')}
   ${bloque('Acciones con plazo vencido',venc.map(([x,a])=>`${esc(rt(x))} — ${esc((a.accion||'').split('\n')[0])} · ${esc(a.resp||'sin responsable')} · ${esc(fecha(a.plazo))}`),'Siguen abiertas y su plazo ya pasó.')}
@@ -596,15 +600,15 @@ const KIND={
   party:{col:'parties',list:()=>D.parties,titulo:'Grupo de interés',pref:'P',nuevo:()=>({tipo:'externa',nombre:'',necesidades:'',expectativas:'',requisitos:''}),
     campos:[['tipo','Tipo','sel',[['externa','Externo'],['interna','Interno']]],['nombre','Grupo de interés','text'],['necesidades','Necesidades','area'],['expectativas','Expectativas','area'],['requisitos','Requisitos para el Sistema','area']],
     req:o=>o.nombre.trim()?'':'Falta el nombre del grupo'},
-  risk:{col:'risks',list:()=>D.risks,titulo:'Riesgo',pref:'R',acc:true,nuevo:()=>({fid:'',causa:'',efecto:'',P:1,G:1,R:1,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null}),
+  risk:{col:'risks',list:()=>D.risks,titulo:'Riesgo',pref:'R',acc:true,nuevo:()=>({fid:'',causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null}),
     span:{fid:4,causa:2,efecto:2,P:1,G:1,Pr:1,Gr:1,just:3,estado:1},
-    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','P · Probabilidad','sel',NIV.slice(1)],['G','G · Gravedad','sel',NIV.slice(1)],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV],['just','Justificación (G=3 o R≥4 sin acción)','area'],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
-    req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
-    post:o=>{o.R=o.P*o.G;o.Rr=o.Pr&&o.Gr?o.Pr*o.Gr:null;recalc(o)}},
+    campos:[['fid','Factor (debilidad o amenaza del DAFO)','fac',['D','A']],['causa','Causa','area'],['efecto','Efecto','area'],['P','P · Probabilidad','sel',NIV],['G','G · Gravedad','sel',NIV],['Pr','P residual','sel',NIV],['Gr','G residual','sel',NIV],['just','Justificación (G=3 o R≥4 sin acción)','area'],['estado','Estado (si no hay acciones)','sel',SEL_EST]],
+    req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&(!o.P||!o.G))?'Valora la probabilidad (P) y la gravedad (G) del riesgo':''),
+    post:o=>{o.R=(o.P&&o.G)?o.P*o.G:null;o.Rr=o.Pr&&o.Gr?o.Pr*o.Gr:null;recalc(o)}},
   opp:{col:'opps',list:()=>D.opps,titulo:'Oportunidad',pref:'O',acc:true,nuevo:()=>({fid:'',V:null,R:null,VR:0,acciones:[],estado:'',just:''}),
     span:{fid:4,V:1,R:1,estado:2,just:4},
     campos:[['fid','Factor (fortaleza u oportunidad del DAFO)','fac',['F','O']],['V','V · Viabilidad','sel',NIV],['R','R · Rentabilidad','sel',NIV],['estado','Estado (si no hay acciones)','sel',SEL_EST],['just','Justificación (V×R = 9 sin acción)','area']],
-    req:o=>o.fid?'':'Elige el factor del DAFO al que pertenece',
+    req:o=>!o.fid?'Elige el factor del DAFO al que pertenece':((!M.id&&(!o.V||!o.R))?'Valora la viabilidad (V) y la rentabilidad (R) de la oportunidad':''),
     post:o=>{o.VR=(o.V||0)*(o.R||0);recalc(o)}},
   obj:{col:'objetivos',list:()=>D.objs,titulo:'Línea de objetivos',pref:'B',nuevo:()=>({anio:S.ano||String(new Date().getFullYear()),origen:'',objetivo:'',acciones:'',indicador:'',resp:'',ref:'',plazo:'',t:['','','',''],res:['','','',''],seg:''}),
     campos:[['anio','Año','text'],['origen','Origen (p. ej. CALIDAD, SEGURIDAD…)','text','dl_ori'],['objetivo','Objetivo','area'],['acciones','Acciones','area'],['indicador','Indicador','text'],['resp','Responsable','text'],['ref','Valor de referencia','text'],['plazo','Plazo','date'],
