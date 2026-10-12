@@ -43,6 +43,9 @@ Cada año es un **ciclo** completo (DAFO, partes, riesgos, oportunidades, objeti
 ## Copias de seguridad del ciclo (desde la aplicación)
 En *Datos generales*: **Crear copia ahora** guarda el ciclo completo (JSON con imágenes) en `DATA_DIR/copias-ciclos/` (o `BACKUP_DIR`), en el propio servidor.
 **Restaurar** sustituye el contenido del ciclo por el de la copia (solo con el ciclo abierto) y antes guarda una copia automática del estado actual.
+**Nombre:** `YYYY-MM-DD HH:MM Ciclo AAAA` (hora de Madrid), igual en manuales y automáticas (si coincide el minuto: `(2)`, `(3)`…).
+**Automáticas** del ciclo abierto: cada **1 h si hay actividad** en la BBDD desde la última copia, cada **24 h si no la hay**.
+Rotación de las automáticas: todas las de las últimas 48 h, una por día hasta 30 días, después se borran. Las manuales no se borran solas.
 API: `GET/POST /api/backups?c=AAAA`, `POST /api/backups/ID/restaurar?c=AAAA`, `DELETE /api/backups/ID`.
 
 ## Copia de seguridad

@@ -102,9 +102,24 @@ function snapshot(c) {
   return out;
 }
 
+// ---- actividad en la BBDD por ciclo (para decidir la frecuencia de las copias automáticas)
+const actividad = {};
+const tocar = c => { if (c) actividad[String(c)] = Date.now(); };
+for (const r of db.prepare('SELECT ciclo, MAX(updated_at) AS u FROM items GROUP BY ciclo').all()) actividad[r.ciclo] = Date.parse(r.u) || 0;
+
 // ---- copias de seguridad de un ciclo (ficheros en BACKUP_DIR, en el mismo servidor que la BD)
 fs.mkdirSync(BK_DIR, { recursive: true });
-function crearCopia(anio, nota, auto) {
+const TZ = 'Europe/Madrid';
+const horaLocal = iso => new Date(iso).toLocaleString('sv-SE', { timeZone: TZ }); // "YYYY-MM-DD HH:MM:SS"
+function nombreCopia(anio, iso) {
+  const base = `${horaLocal(iso).slice(0, 16)} Ciclo ${anio}`;
+  const usados = new Set(listarCopias(anio).map(m => m.nombre));
+  let n = base, k = 2;
+  while (usados.has(n)) n = `${base} (${k++})`;
+  return n;
+}
+// tipo: 'manual' (botón), 'auto' (programada) o 'previa' (seguridad antes de restaurar)
+function crearCopia(anio, nota, tipo) {
   const c = getCiclo.get(anio);
   const snap = snapshot(anio); delete snap.imgs;
   const imgs = db.prepare('SELECT id, anio, key, nombre, w, h, png FROM imgs WHERE anio = ? ORDER BY n, rowid').all(anio).map(r => ({ ...r, png: r.png.toString('base64') }));
@@ -112,11 +127,13 @@ function crearCopia(anio, nota, auto) {
   const ts = creado.replace(/[-:T]/g, '').slice(0, 14).replace(/^(\d{8})(\d{6})$/, '$1-$2');
   let id = `ciclo-${anio}-${ts}`;
   if (fs.existsSync(path.join(BK_DIR, id + '.json'))) id += '-' + crypto.randomBytes(2).toString('hex').slice(0, 3);
-  const doc = { tipo: 'sgi-ciclo', version: 1, anio, creado, nota: String(nota || '').slice(0, 200), auto: !!auto, estadoCiclo: c ? c.estado : null, items: snap, imgs };
+  const nombre = nombreCopia(anio, creado);
+  const t = tipo === 'auto' || tipo === 'previa' ? tipo : 'manual';
+  const doc = { tipo: 'sgi-ciclo', version: 1, anio, creado, nombre, nota: String(nota || '').slice(0, 200), tipoCopia: t, auto: t !== 'manual', estadoCiclo: c ? c.estado : null, items: snap, imgs };
   const fichero = path.join(BK_DIR, id + '.json');
   fs.writeFileSync(fichero + '.tmp', JSON.stringify(doc)); fs.renameSync(fichero + '.tmp', fichero);
   const resumen = {}; for (const col of COLS) resumen[col] = (snap[col] || []).length; resumen.imgs = imgs.length;
-  const meta = { id, anio, creado, nota: doc.nota, auto: !!auto, estadoCiclo: doc.estadoCiclo, bytes: fs.statSync(fichero).size, resumen };
+  const meta = { id, nombre, anio, creado, nota: doc.nota, tipoCopia: t, auto: t !== 'manual', estadoCiclo: doc.estadoCiclo, bytes: fs.statSync(fichero).size, resumen };
   fs.writeFileSync(path.join(BK_DIR, id + '.meta.json'), JSON.stringify(meta));
   return meta;
 }
@@ -126,6 +143,7 @@ function listarCopias(anio) {
     if (!f.endsWith('.meta.json')) continue;
     try { const m = JSON.parse(fs.readFileSync(path.join(BK_DIR, f), 'utf8')); if (!anio || m.anio === anio) out.push(m); } catch { /* ignora ficheros dañados */ }
   }
+  for (const m of out) { if (!m.nombre) m.nombre = `${horaLocal(m.creado).slice(0, 16)} Ciclo ${m.anio}`; if (!m.tipoCopia) m.tipoCopia = m.auto ? 'auto' : 'manual'; }
   return out.sort((a, b) => b.creado.localeCompare(a.creado));
 }
 function leerCopia(id) {
@@ -144,7 +162,8 @@ function restaurarCopia(id, anio) {
   const d = leerCopia(id);
   if (d.anio !== anio) throw fail(409, `La copia es del ciclo ${d.anio}, no del ${anio}`);
   cicloAbierto(anio);
-  const previa = crearCopia(anio, `Automática antes de restaurar ${id}`, true); // red de seguridad
+  const previa = crearCopia(anio, `Estado anterior a restaurar «${d.nombre || id}»`, 'previa'); // red de seguridad
+  tocar(anio);
   db.transaction(() => {
     db.prepare('DELETE FROM items WHERE ciclo = ?').run(anio);
     db.prepare('DELETE FROM imgs WHERE anio = ?').run(anio);
@@ -263,7 +282,7 @@ const server = http.createServer(async (req, res) => {
         if (o.estado !== 'cerrado') return send(res, 409, { error: `El ciclo ${desde} debe cerrarse antes de crear el siguiente` });
         if (getCiclo.get(anio)) return send(res, 409, { error: `El ciclo ${anio} ya existe` });
         if (+anio <= +desde) return send(res, 400, { error: 'el nuevo ciclo debe ser posterior' });
-        crearCiclo(desde, anio);
+        crearCiclo(desde, anio); tocar(anio);
         return send(res, 201, getCiclo.get(anio));
       }
       if (m === 'POST' && seg.length === 3 && seg[2] === 'cerrar' && YEAR.test(seg[1])) {
@@ -287,7 +306,7 @@ const server = http.createServer(async (req, res) => {
       if (m === 'POST' && seg.length === 1) {
         if (!YEAR.test(c || '') || !getCiclo.get(c)) return send(res, 404, { error: 'el ciclo no existe' });
         let nota = ''; try { nota = (parseJson(await readBody(req)) || {}).nota || ''; } catch { /* sin cuerpo */ }
-        return send(res, 201, crearCopia(c, nota, false));
+        return send(res, 201, crearCopia(c, nota, 'manual'));
       }
       if (m === 'POST' && seg.length === 3 && seg[2] === 'restaurar') {
         if (!YEAR.test(c || '')) return send(res, 400, { error: 'ciclo no indicado' });
@@ -320,7 +339,7 @@ const server = http.createServer(async (req, res) => {
         const id = crypto.randomBytes(8).toString('hex');
         const nombre = (url.searchParams.get('nombre') || '').slice(0, 200);
         const n = (db.prepare('SELECT COALESCE(MAX(n),0)+1 AS n FROM imgs').get().n);
-        db.prepare('INSERT INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)').run(id, anio, key, nombre, w, h, png, now(), n);
+        db.prepare('INSERT INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)').run(id, anio, key, nombre, w, h, png, now(), n); tocar(anio);
         return send(res, 201, { id, anio, key, nombre, w, h });
       }
       if (seg.length === 2 && ID.test(seg[1])) {
@@ -331,7 +350,7 @@ const server = http.createServer(async (req, res) => {
         if (m === 'DELETE') {
           const r = db.prepare('SELECT anio FROM imgs WHERE id = ?').get(seg[1]);
           if (r) cicloAbierto(r.anio);
-          db.prepare('DELETE FROM imgs WHERE id = ?').run(seg[1]);
+          db.prepare('DELETE FROM imgs WHERE id = ?').run(seg[1]); if (r) tocar(r.anio);
           return send(res, 200, { ok: true });
         }
       }
@@ -365,6 +384,7 @@ const server = http.createServer(async (req, res) => {
         for (const im of d.imgs || []) db.prepare('INSERT INTO imgs (id, anio, key, nombre, w, h, png, updated_at, n) VALUES (?,?,?,?,?,?,?,?,?)')
           .run(String(im.id), String(im.anio), String(im.key), String(im.nombre || ''), +im.w, +im.h, Buffer.from(im.png, 'base64'), now(), ++n);
       })();
+      for (const x of d.ciclos) tocar(x.anio);
       return send(res, 200, { ok: true });
     }
 
@@ -376,16 +396,53 @@ const server = http.createServer(async (req, res) => {
         const e = check(col, d); if (e) return send(res, 400, { error: e });
         cicloAbierto(c);
         const { id: _drop, ...rest } = d;
-        upsert.run(c, col, id, JSON.stringify(rest), now());
+        upsert.run(c, col, id, JSON.stringify(rest), now()); tocar(c);
         return send(res, 200, { ...rest, id });
       }
-      if (m === 'DELETE') { cicloAbierto(c); del.run(c, col, id); return send(res, 200, { ok: true }); }
+      if (m === 'DELETE') { cicloAbierto(c); del.run(c, col, id); tocar(c); return send(res, 200, { ok: true }); }
     }
     send(res, 404, { error: 'no encontrado' });
   } catch (e) {
     send(res, [400, 404, 409, 413].includes(e.code) ? e.code : 500, { error: e.message });
   }
 });
+
+// ---- copias automáticas del ciclo activo (abierto):
+//  · cada 1 h si ha habido actividad en la BBDD desde la última copia
+//  · cada 24 h si no ha habido actividad
+const H1 = +process.env.SGI_BACKUP_CON_ACTIVIDAD_MS || 3600e3, H24 = +process.env.SGI_BACKUP_SIN_ACTIVIDAD_MS || 24 * 3600e3; // sobreescribibles solo para pruebas
+function rotarCopias(anio) {
+  const ahora = Date.now(), vistos = new Set();
+  for (const m of listarCopias(anio)) { // de la más nueva a la más antigua
+    if (m.tipoCopia === 'manual') continue; // las manuales nunca se borran solas
+    const edad = ahora - Date.parse(m.creado);
+    let borrar = false;
+    if (edad > 30 * 24 * 3600e3) borrar = true;           // más de 30 días
+    else if (edad > 48 * 3600e3) {                           // entre 48 h y 30 días: una por día
+      const dia = horaLocal(m.creado).slice(0, 10);
+      if (vistos.has(dia)) borrar = true; else vistos.add(dia);
+    }
+    if (borrar) for (const ext of ['.json', '.meta.json']) { try { fs.unlinkSync(path.join(BK_DIR, m.id + ext)); } catch { /* ya no está */ } }
+  }
+}
+function copiasAutomaticas() {
+  for (const c of listCiclos().filter(x => x.estado === 'abierto')) {
+    try {
+      const l = listarCopias(c.anio);
+      const ultima = l.length ? Date.parse(l[0].creado) : 0;
+      const hayActividad = (actividad[c.anio] || 0) > ultima;
+      const espera = Date.now() - ultima;
+      if ((hayActividad && espera >= H1) || espera >= H24) {
+        const m = crearCopia(c.anio, hayActividad ? 'Automática (con actividad)' : 'Automática (diaria)', 'auto');
+        console.log(`Copia automática: ${m.nombre}`);
+        rotarCopias(c.anio);
+      }
+    } catch (e) { console.error('Error en la copia automática:', e.message); }
+  }
+}
+const TICK = +process.env.SGI_BACKUP_TICK_MS || 60e3;
+setTimeout(copiasAutomaticas, Math.min(15e3, TICK));
+setInterval(copiasAutomaticas, TICK).unref();
 
 server.listen(PORT, HOST, () => console.log(`SGI escuchando en http://${HOST}:${PORT} · datos en ${DATA_DIR}`));
 process.on('SIGTERM', () => { server.close(); db.close(); process.exit(0); });

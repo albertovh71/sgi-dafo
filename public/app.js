@@ -910,7 +910,8 @@ function cicloCard(){
 // ---- copias de seguridad del ciclo (se guardan en el servidor, junto a la base de datos)
 function copiasCard(){
   return `<div class="card pad mt" style="max-width:980px"><h2>Copias de seguridad del ciclo ${esc(CICLO)}</h2>
-   <p class="mut" style="margin-top:0">Se guardan en el servidor donde está alojada la aplicación, junto a la base de datos. Cada copia contiene el ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos, revisión e imágenes). Al restaurar, el ciclo vuelve exactamente a ese estado.</p>
+   <p class="mut" style="margin-top:0">Se guardan en el servidor donde está alojada la aplicación, junto a la base de datos. Cada copia contiene el ciclo completo (DAFO, partes, riesgos, oportunidades, objetivos, revisión e imágenes). Al restaurar, el ciclo vuelve exactamente a ese estado.<br>
+   <b>Copias automáticas:</b> cada hora si hay cambios en la base de datos y cada 24 h si no los hay (las de más de 48 h se reducen a una por día y se borran a los 30 días; las manuales no se borran solas).</p>
    <div class="bar"><input id="bkNota" placeholder="Nota de la copia (opcional)" style="min-width:260px" class="keep"><button class="btn pri keep" onclick="crearCopia()">Crear copia ahora</button></div>
    <div id="copias" class="mut">Cargando copias…</div></div>`;
 }
@@ -922,8 +923,8 @@ async function cargarCopias(){
     const l=await api('GET',`api/backups?c=${CICLO}`);
     if(!document.getElementById('copias'))return;
     el.className='';
-    el.innerHTML=l.length?`<div class="scroll"><table><thead><tr><th>Fecha</th><th>Nota</th><th>Contenido</th><th>Tamaño</th><th></th></tr></thead><tbody>
-     ${l.map(b=>`<tr><td style="white-space:nowrap">${esc(fechaHora(b.creado))}</td><td>${b.auto?'<span class="tag">automática</span> ':''}${esc(b.nota||'')}</td>
+    el.innerHTML=l.length?`<div class="scroll"><table><thead><tr><th>Nombre</th><th>Nota</th><th>Contenido</th><th>Tamaño</th><th></th></tr></thead><tbody>
+     ${l.map(b=>`<tr><td style="white-space:nowrap"><b>${esc(b.nombre)}</b></td><td>${b.tipoCopia==='auto'?'<span class="tag">automática</span> ':b.tipoCopia==='previa'?'<span class="tag">previa a restaurar</span> ':''}${esc(b.nota||'')}</td>
       <td class="mut">${b.resumen.factors} factores · ${b.resumen.risks} riesgos · ${b.resumen.opps} oportunidades · ${b.resumen.objetivos} objetivos${b.resumen.imgs?` · ${b.resumen.imgs} imágenes`:''}</td>
       <td style="white-space:nowrap">${kb(b.bytes)}</td>
       <td style="white-space:nowrap"><button class="btn sm" onclick="dialogRestaurar('${b.id}')">Restaurar</button> <button class="btn sm danger" onclick="eliminarCopia('${b.id}')">Eliminar</button></td></tr>`).join('')}
@@ -945,7 +946,7 @@ async function eliminarCopia(id){
 async function dialogRestaurar(id){
   let b;try{b=(await api('GET',`api/backups?c=${CICLO}`)).find(x=>x.id===id)}catch(e){toast('No se pudo leer la copia: '+e.message,true);return}
   if(!b){toast('La copia ya no existe',true);return}
-  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Restaurar la copia del ${esc(fechaHora(b.creado))}</h2>
+  document.getElementById('modal').innerHTML=`<div class="mbg"><div class="mbox" role="dialog"><h2>Restaurar «${esc(b.nombre)}»</h2>
    <p>Se <b>sustituirá todo el contenido del ciclo ${esc(CICLO)}</b> por el de esta copia:</p>
    <ul><li>${b.resumen.factors} factores · ${b.resumen.risks} riesgos · ${b.resumen.opps} oportunidades · ${b.resumen.objetivos} objetivos${b.resumen.imgs?` · ${b.resumen.imgs} imágenes`:''}</li>${b.nota?`<li>Nota: ${esc(b.nota)}</li>`:''}</ul>
    <p class="mut">Antes de restaurar se guarda automáticamente una copia del estado actual, por si necesitas volver atrás.</p>
