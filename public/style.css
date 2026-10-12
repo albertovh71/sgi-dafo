@@ -120,3 +120,16 @@ tr.flash>td{animation:flashrow 1.8s ease-out}
 .robanner{background:#fdeceb;color:#7a1f18;border:1px solid #f0b9b5;border-radius:8px;padding:8px 12px;margin-bottom:12px}
 .prev{font-size:10px;color:var(--muted);white-space:nowrap;margin-top:2px}
 .ro tr.cat{cursor:pointer}
+
+/* búsqueda */
+.navrow{display:flex;align-items:center;gap:12px}
+.buscar{margin-left:auto;display:flex;align-items:center;gap:6px}
+.lupa{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:3px 9px;cursor:pointer;font-size:14px}
+.lupa:hover{border-color:var(--green-dark)}
+.qbox{display:none;align-items:center;gap:4px}.qbox.open{display:flex}
+.qbox input{width:240px;padding:4px 8px}
+.qnav{border:1px solid var(--line);background:var(--surface);border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:15px;line-height:1}
+.qcount{font-size:12px;color:var(--muted);white-space:nowrap}
+mark.hl{background:#ffe14d;color:inherit;border-radius:2px;padding:0 1px}
+mark.hl.cur{background:#ffb020;outline:1px solid #c27c00}
+@media(max-width:900px){.qbox input{width:140px}}

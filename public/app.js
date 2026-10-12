@@ -62,11 +62,73 @@ function evaluar(id){const f=fm[id];
   S.estado='todos';S.proceso='';render()}
 
 const TABS=[['general','Datos generales'],['partes','Partes'],['externo','Externo'],['interno','Interno'],['dafo','DAFO'],['riesgos','Riesgos'],['oport','Oportunidades'],null,['procesos','Procesos'],['objetivos','Objetivos'],['revision','Revisión dirección'],null,['flujo','Flujo'],['criterios','Criterios'],['coherencia','Coherencia']];
+// ---- búsqueda por texto en la pestaña (resalta en amarillo hasta cambiar de menú)
+const BUSCABLE=new Set(['externo','interno','dafo','riesgos','oport','objetivos','coherencia']);
+let SRCH={tab:'',term:'',open:false,i:-1};
+const fold=s=>s.split('').map(c=>(c.normalize('NFD')[0]||c).toLowerCase()).join('');
+function pintarBuscar(){
+  const el=document.getElementById('buscar');if(!el)return;
+  if(!BUSCABLE.has(S.tab)){el.innerHTML='';return}
+  el.innerHTML=`<span id="qcount" class="qcount"></span>
+   <span class="qbox ${SRCH.open?'open':''}"><input id="qin" type="search" placeholder="Buscar en esta pestaña…" value="${esc(SRCH.term)}" oninput="buscarTexto(this.value)" onkeydown="buscarTecla(event)" ${SRCH.open?'':'tabindex="-1"'}>
+   <button class="qnav" title="Anterior" onclick="buscarIr(-1)">‹</button><button class="qnav" title="Siguiente" onclick="buscarIr(1)">›</button></span>
+   <button class="lupa" id="lupa" title="Buscar en esta pestaña" onclick="buscarAbrir()">🔍</button>`;
+  if(SRCH.term)aplicarHl(false);
+}
+function buscarAbrir(){
+  if(SRCH.open&&!SRCH.term){SRCH.open=false}else SRCH.open=true;
+  document.querySelector('#buscar .qbox').classList.toggle('open',SRCH.open);
+  if(SRCH.open){const i=document.getElementById('qin');i.tabIndex=0;i.focus();i.select()}
+}
+function buscarTexto(v){SRCH.term=v;clearTimeout(buscarTexto.h);buscarTexto.h=setTimeout(()=>aplicarHl(true),150)}
+function buscarTecla(e){
+  if(e.key==='Enter'){e.preventDefault();buscarIr(e.shiftKey?-1:1)}
+  else if(e.key==='Escape'){SRCH.term='';e.target.value='';aplicarHl(false);SRCH.open=false;document.querySelector('#buscar .qbox').classList.remove('open')}
+}
+function limpiarHl(){
+  const v=document.getElementById('view');if(!v||!v.querySelectorAll)return;
+  v.querySelectorAll('mark.hl').forEach(m=>m.replaceWith(document.createTextNode(m.textContent)));
+  v.normalize();
+}
+function aplicarHl(saltar){
+  limpiarHl();
+  const v=document.getElementById('view'),t=fold(SRCH.term.trim()),cnt=document.getElementById('qcount');
+  SRCH.i=-1;
+  if(!v||!v.querySelectorAll){return}
+  if(t.length<2){if(cnt)cnt.textContent=SRCH.term.trim()?'mín. 2 letras':'';return}
+  const w=document.createTreeWalker(v,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.trim()&&!n.parentElement.closest('button,select,option,textarea,input,script,style,mark')?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const nodos=[];while(w.nextNode())nodos.push(w.currentNode);
+  let total=0;
+  for(const n of nodos){
+    const txt=n.nodeValue,f=fold(txt);let i=f.indexOf(t);if(i<0)continue;
+    const frag=document.createDocumentFragment();let pos=0;
+    while(i>=0){
+      if(i>pos)frag.append(txt.slice(pos,i));
+      const m=document.createElement('mark');m.className='hl';m.textContent=txt.slice(i,i+t.length);frag.append(m);total++;
+      pos=i+t.length;i=f.indexOf(t,pos);
+    }
+    if(pos<txt.length)frag.append(txt.slice(pos));
+    n.replaceWith(frag);
+  }
+  // desplegar lo que esté plegado y contenga coincidencias
+  v.querySelectorAll('mark.hl').forEach(m=>{const tb=m.closest('tbody.shut');if(tb)tb.classList.remove('shut');const d=m.closest('details:not([open])');if(d)d.open=true});
+  if(cnt)cnt.textContent=total?`${total} coincidencia${total>1?'s':''}`:'sin coincidencias';
+  if(total&&saltar)buscarIr(1);
+}
+function buscarIr(d){
+  const ms=[...document.querySelectorAll('#view mark.hl')];if(!ms.length)return;
+  ms.forEach(m=>m.classList.remove('cur'));
+  SRCH.i=(SRCH.i+d+ms.length)%ms.length;
+  const m=ms[SRCH.i];m.classList.add('cur');m.scrollIntoView({block:'center'});
+  const cnt=document.getElementById('qcount');if(cnt)cnt.textContent=`${SRCH.i+1} de ${ms.length}`;
+}
 function render(){
+  if(SRCH.tab!==S.tab)SRCH={tab:S.tab,term:'',open:false,i:-1};
   document.getElementById('tabs').innerHTML=TABS.map(t=>t?`<button class="${S.tab===t[0]?'on':''}" onclick="irTab('${t[0]}')">${t[1]}</button>`:'<span class="sep"></span>').join('');
   document.getElementById('wrap').className='wrap'+(S.tab==='riesgos'||S.tab==='oport'?' wide':'')+(RO?' ro':'');
   document.getElementById('view').innerHTML=VIEWS[S.tab]();
   pintarCiclo();
+  pintarBuscar();
   if(RO)document.querySelectorAll('#view button:not(.keep),#view select:not(.keep),#view input,#view textarea').forEach(e=>{e.disabled=true});
   if(FOCO){const id=FOCO;FOCO=null;
     const rows=[...document.querySelectorAll('#view tr[data-rid]')].filter(r=>r.dataset.rid===id);
