@@ -43,6 +43,17 @@ function setR(i,f,v){const r=D.risks[i];r[f]=(f==='estado'||f==='just')?v:(v==='
 function setO(i,f,v){const o=D.opps[i];o[f]=(f==='estado'||f==='just')?v:(v===''?null:+v);if(f==='V'||f==='R')o.VR=(o.V||0)*(o.R||0);guardar('opps',o);render()}
 function setAcc(col,i,j,f,v){const x=D[col][i];x.acciones[j][f]=v;recalc(x);guardar(col,x);render()}
 let FOCO=null;
+// Cada factor del DAFO tiene siempre su fila en Riesgos (D, A) u Oportunidades (F, O), sin valorar hasta que el usuario la evalúe.
+async function asegurarFilas(){
+  const nuevos=[];
+  for(const f of D.factors){
+    if(fila0(f))continue;
+    if(f.tipo==='D'||f.tipo==='A'){const r={id:'R-'+f.id,fid:f.id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:'',just:'',Pr:null,Gr:null,Rr:null};D.risks.push(r);nuevos.push(['risks',r])}
+    else{const o={id:'O-'+f.id,fid:f.id,V:null,R:null,VR:0,acciones:[],estado:'',just:''};D.opps.push(o);nuevos.push(['opps',o])}
+  }
+  for(const [col,x] of nuevos){try{await api('PUT',`api/${col}/${encodeURIComponent(x.id)}`,x)}catch(e){toast('NO SE HA GUARDADO una fila nueva: '+e.message,true)}}
+  return nuevos.length;
+}
 function evaluar(id){const f=fm[id];
   const ya=fila0(f);
   if(ya){FOCO=ya.id;S.tab=(f.tipo==='D'||f.tipo==='A')?'riesgos':'oport';S.estado='todos';S.proceso='';render();return}
@@ -133,7 +144,7 @@ async function fdAplicar(){
     for(const o of d.ob)await api('DELETE',`api/opps/${encodeURIComponent(o.id)}`);
     for(const f of d.borr)await api('DELETE',`api/factors/${encodeURIComponent(f.id)}`);
     D.factors=FD;D.risks=D.risks.filter(r=>!d.rb.includes(r));D.opps=D.opps.filter(o=>!d.ob.includes(o));
-    FD=null;FE={externo:[],interno:[]};reindex();cerrar();toast('Cambios aplicados');n?n():render();
+    FD=null;FE={externo:[],interno:[]};reindex();const nf=await asegurarFilas();cerrar();toast(nf?`Cambios aplicados · ${nf} fila(s) nuevas en Riesgos/Oportunidades`:'Cambios aplicados');n?n():render();
   }catch(e){FD=null;FE={externo:[],interno:[]};cerrar();toast('NO SE HAN APLICADO TODOS LOS CAMBIOS: '+e.message+'. Se han recargado los datos.',true);await boot()}
 }
 function irTab(t){
@@ -760,7 +771,9 @@ async function boot(){
     const y=(D.meta.fecha||'').slice(0,4);
     REV.anio=D.meta.revAnio||(y?String(+y):String(new Date().getFullYear()-1));
     S.ano=anios()[0]||String(new Date().getFullYear());
-    reindex();render();
+    reindex();
+    const n=await asegurarFilas();if(n)toast(`Se han añadido ${n} fila(s) a Riesgos/Oportunidades para los factores del DAFO`);
+    render();
   }catch(e){document.getElementById('view').innerHTML=`<div class="banner">No se pudieron cargar los datos: ${esc(e.message)}</div>`}
 }
 boot();
