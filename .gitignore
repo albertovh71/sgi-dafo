@@ -7,3 +7,5 @@ cloudflared/
 
 data/copias-ciclos/
 data/*.pre-ciclos
+s_*.png
+*.bundle
