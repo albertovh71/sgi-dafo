@@ -4,3 +4,6 @@ data/backups
 .env
 mockup/
 cloudflared/
+
+data/copias-ciclos/
+data/*.pre-ciclos
