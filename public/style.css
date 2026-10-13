@@ -133,3 +133,6 @@ tr.flash>td{animation:flashrow 1.8s ease-out}
 mark.hl{background:#ffe14d;color:inherit;border-radius:2px;padding:0 1px}
 mark.hl.cur{background:#ffb020;outline:1px solid #c27c00}
 @media(max-width:900px){.qbox input{width:140px}}
+
+.pill.go{cursor:pointer;transition:transform .1s}
+.pill.go:hover{transform:scale(1.12);box-shadow:0 0 0 2px rgba(21,32,75,.25)}

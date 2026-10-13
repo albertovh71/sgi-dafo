@@ -87,6 +87,7 @@ async function asegurarFilas(){
 }
 function evaluar(id){const f=fm[id];
   const ya=fila0(f);
+  if(!ya&&RO){toast(`El ciclo ${CICLO} está cerrado: solo lectura`,true);return}
   if(ya){FOCO=ya.id;S.tab=(f.tipo==='D'||f.tipo==='A')?'riesgos':'oport';S.estado='todos';S.proceso='';render();return}
   if(f.tipo==='D'||f.tipo==='A'){const r={id:nid('R'),fid:id,causa:'',efecto:'',P:null,G:null,R:null,acciones:[],estado:''};D.risks.push(r);guardar('risks',r);FOCO=r.id;S.tab='riesgos'}
   else{const o={id:nid('O'),fid:id,V:null,R:null,VR:0,acciones:[],estado:''};D.opps.push(o);guardar('opps',o);FOCO=o.id;S.tab='oport'}
@@ -360,7 +361,8 @@ function dafo(){
   const m=D.meta, orden=[...Object.values(PROCS),'(sin proceso)'];
   const par=(a,b,ta,tb)=>{
     const cel=f=>{if(!f)return '<td></td><td></td>';const e=evaluado(f),neg=f.tipo==='D'||f.tipo==='A';
-      const bd=e?(neg?`<span class="pill ${lvl(e.R)}">R ${e.R??'—'}</span>`:`<span class="pill ${valorado(e)?lvl(e.VR):'n'}">VR ${valorado(e)?e.VR:'—'}</span>`):`${fila0(f)?'<span class="pill n">pendiente de evaluar</span> ':''}<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
+      const go=`onclick="evaluar('${f.id}')" title="Ir a su evaluación en ${neg?'Riesgos':'Oportunidades'}"`;
+      const bd=e?(neg?`<span class="pill go ${lvl(e.R)}" ${go}>R ${e.R??'—'}</span>`:`<span class="pill go ${valorado(e)?lvl(e.VR):'n'}" ${go}>VR ${valorado(e)?e.VR:'—'}</span>`):`${fila0(f)?'<span class="pill n">pendiente de evaluar</span> ':''}<button class="btn" onclick="evaluar('${f.id}')">Evaluar →</button>`;
       return `<td>${esc(f.texto)} <button class="ed" title="Editar" onclick="editar('factor','${f.id}')">✎</button></td><td class="xx">${bd}</td>`};
     const grupos=orden.map(p=>{
       const A=D.factors.filter(f=>f.tipo===a&&okProc(f.proceso)&&proc(f.proceso)===p), B=D.factors.filter(f=>f.tipo===b&&okProc(f.proceso)&&proc(f.proceso)===p);
